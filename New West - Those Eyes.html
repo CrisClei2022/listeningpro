@@ -191,6 +191,8 @@
     
 
     <script>
+    
+    
         // Variáveis globais
         let videoId = 'b_CpWmkhwq0';
         let srt = `0
@@ -362,6 +364,8 @@ All the small things you do`;
         let monitorTempoId;
         let fraseAcertada = false;
         let audioPlaying = false; // Flag para controlar se o áudio está tocando
+        
+        
 
         // Função para converter tempo de legenda para segundos
         function converterTempo(tempo) {
@@ -592,6 +596,56 @@ All the small things you do`;
             
             document.getElementById('avancar').style.display = 'inline-block';
         };
+
+                // Carregar a API do YouTube
+        let tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        let firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // Função para criar o player
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('ytplayer', {
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        // Função chamada quando o player está pronto
+        function onPlayerReady(event) {
+            playerReady = true;
+            // Desativar interação com o vídeo
+            let iframe = document.querySelector('#video-container iframe');
+            if (iframe) {
+                iframe.style.pointerEvents = 'none';
+            }
+            reproduzirTrechoAtual();
+        }
+
+        // Função chamada quando o estado do player muda
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                // Se o sintetizador de voz estiver tocando, pausar
+                if (speechSynthesis.speaking) {
+                    speechSynthesis.cancel();
+                    audioPlaying = false;
+                }
+                iniciarMonitorTempo();
+            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                pararMonitorTempo();
+            }
+        }
+
+        // Função para reproduzir o trecho do vídeo atual
+        function reproduzirTrechoAtual() {
+            if (playerReady && player) {
+                player.seekTo(fraseAtual.tempoInicio);
+                player.playVideo();
+                iniciarMonitorTempo();
+            }
+        }
 
         // Evento para repetir o trecho de vídeo atual
         document.getElementById('repetir').onclick = function() {
