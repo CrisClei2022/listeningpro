@@ -97,6 +97,13 @@
             width: 100%;
             aspect-ratio: 16/9;
             position: relative;
+            background-color: #000;
+        }
+        
+        #custom-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
         
         button {
@@ -142,43 +149,24 @@
             background: linear-gradient(to bottom, #0b7dda 0%, #2196F3 50%, #42a5f5 100%);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        
-        #avancar {
-            background-color: #2196F3;
-            font-weight: bold;
-            padding: 12px 20px;
-            font-size: 16px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        #avancar:hover {
-            background-color: #0b7dda;
-        }
-        
-        
     </style>
 </head>
 <body>
 
-    <div id="video-container"></div>
+    <div id="video-container">
+        <video id="custom-video" controls>
+            <source src="https://files.catbox.moe/k7xhth.mp4" type="video/mp4">
+            Seu navegador não suporta vídeos HTML5.
+        </video>
+    </div>
     <div class="frase" id="frase"></div>
     <div id="palavras"></div>
     <div id="botoes">
-    
-        <div id="botoes">
-        
         <button id="repetir" style="background: linear-gradient(to bottom, #ffc078 0%, #ffa94d 50%, #e59442 100%);">Repetir Trecho</button>
-        
         <button id="lerFrase" style="background: linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%);">Ouvir Frase</button>
-        
         <button id="desistir" style="background: linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%);">Desistir</button>
-        
     </div>
     
-    <div id="botao-avancar">
-        <button id="avancar" style="display: none;">Avançar</button>
-    </div>
-    </div>
     <div id="botao-avancar">
         <button id="avancar" style="display: none;">Avançar</button>
     </div>
@@ -191,10 +179,8 @@
     
 
     <script>
-    
-    
         // Variáveis globais
-        let videoId = 'b_CpWmkhwq0';
+        let videoUrl = 'https://files.catbox.moe/k7xhth.mp4'; // URL do vídeo atualizado
         let srt = `0
 00:00:00,667 --> 00:00:04,963
 When we're out in a crowd
@@ -340,6 +326,10 @@ small things you do
 00:03:23,953 --> 00:03:26,998
 All the small things you do`;
 
+        // Configuração do player de vídeo
+        const videoElement = document.getElementById('custom-video');
+        videoElement.src = videoUrl;
+        
         // Processar as frases das legendas
         let frases = srt.split('\n\n').map(bloco => {
             let linhas = bloco.split('\n');
@@ -359,13 +349,10 @@ All the small things you do`;
         let palavraElementos = {};
         let progresso = 0;
         let acertos = 0;
-        let player;
         let playerReady = false;
         let monitorTempoId;
         let fraseAcertada = false;
-        let audioPlaying = false; // Flag para controlar se o áudio está tocando
-        
-        
+        let audioPlaying = false;
 
         // Função para converter tempo de legenda para segundos
         function converterTempo(tempo) {
@@ -374,13 +361,20 @@ All the small things you do`;
             return parseInt(segundos[0]) * 3600 + parseInt(segundos[1]) * 60 + parseInt(segundos[2]) + parseInt(partes[1]) / 1000;
         }
 
+        // Evento que ocorre quando o vídeo está pronto
+        videoElement.addEventListener('loadedmetadata', function() {
+            playerReady = true;
+            // Iniciar o jogo após o vídeo estar pronto
+            iniciarJogo();
+        });
+
         // Função para monitorar o tempo do vídeo
         function iniciarMonitorTempo() {
             monitorTempoId = setInterval(() => {
-                if (player && playerReady) {
-                    let tempoAtual = player.getCurrentTime();
+                if (playerReady) {
+                    let tempoAtual = videoElement.currentTime;
                     if (tempoAtual >= fraseAtual.tempoFim) {
-                        player.pauseVideo();
+                        videoElement.pause();
                         pararMonitorTempo();
                     }
                 }
@@ -468,8 +462,8 @@ All the small things you do`;
             }
             
             // Pausar o vídeo se estiver tocando
-            if (playerReady && player && player.getPlayerState() === YT.PlayerState.PLAYING) {
-                player.pauseVideo();
+            if (playerReady && !videoElement.paused) {
+                videoElement.pause();
             }
         }
 
@@ -493,11 +487,6 @@ All the small things you do`;
                 span.textContent = palavra;
                 span.classList.add('palavra-na-frase'); // Adiciona classe para estilização
                 fraseDiv.appendChild(span);
-                
-                // Não adicionar espaço após a última palavra
-                if (index < palavrasClicadas.length - 1) {
-                    // Espaço já está sendo adicionado via CSS com margin-right
-                }
             });
         }
 
@@ -505,8 +494,8 @@ All the small things you do`;
         function verificarFrase() {
             if (palavrasClicadas.join(' ') === fraseAtual.texto) {
                 document.getElementById('avancar').style.display = 'inline-block';
-                if (playerReady && player) {
-                    player.pauseVideo();
+                if (playerReady && !videoElement.paused) {
+                    videoElement.pause();
                 }
                 progresso++;
                 fraseAcertada = true;
@@ -550,9 +539,9 @@ All the small things you do`;
                 pausarAudios();
             }
             
-            if (playerReady && player) {
-                player.seekTo(fraseAtual.tempoInicio);
-                player.playVideo();
+            if (playerReady) {
+                videoElement.currentTime = fraseAtual.tempoInicio;
+                videoElement.play();
                 iniciarMonitorTempo();
             }
         }
@@ -597,56 +586,6 @@ All the small things you do`;
             document.getElementById('avancar').style.display = 'inline-block';
         };
 
-                // Carregar a API do YouTube
-        let tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        let firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-        // Função para criar o player
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('ytplayer', {
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-        }
-
-        // Função chamada quando o player está pronto
-        function onPlayerReady(event) {
-            playerReady = true;
-            // Desativar interação com o vídeo
-            let iframe = document.querySelector('#video-container iframe');
-            if (iframe) {
-                iframe.style.pointerEvents = 'none';
-            }
-            reproduzirTrechoAtual();
-        }
-
-        // Função chamada quando o estado do player muda
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING) {
-                // Se o sintetizador de voz estiver tocando, pausar
-                if (speechSynthesis.speaking) {
-                    speechSynthesis.cancel();
-                    audioPlaying = false;
-                }
-                iniciarMonitorTempo();
-            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-                pararMonitorTempo();
-            }
-        }
-
-        // Função para reproduzir o trecho do vídeo atual
-        function reproduzirTrechoAtual() {
-            if (playerReady && player) {
-                player.seekTo(fraseAtual.tempoInicio);
-                player.playVideo();
-                iniciarMonitorTempo();
-            }
-        }
-
         // Evento para repetir o trecho de vídeo atual
         document.getElementById('repetir').onclick = function() {
             reproduzirTrechoAtual();
@@ -657,81 +596,15 @@ All the small things you do`;
             lerFraseAtual();
         };
 
-        // Função que é chamada quando a API do YouTube está pronta
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('video-container', {
-                videoId: videoId,
-                playerVars: {
-                    autoplay: 0, // Não iniciar automaticamente
-                    controls: 0, // Ocultar controles
-                    rel: 0, // Não mostrar vídeos relacionados
-                    fs: 0, // Desativar botão de tela cheia
-                    modestbranding: 1, // Remover logo do YouTube
-                    disablekb: 1, // Desativar controles de teclado
-                    iv_load_policy: 3, // Ocultar anotações
-                    showinfo: 0, // Ocultar informações do vídeo
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-        }
-
-        // Função chamada quando o player está pronto
-        function onPlayerReady(event) {
-            playerReady = true;
-            // Desativar interação com o vídeo
-            let iframe = document.querySelector('#video-container iframe');
-            if (iframe) {
-                iframe.style.pointerEvents = 'none';
-            }
-            reproduzirTrechoAtual();
-        }
-
-        // Função chamada quando o estado do player muda
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING) {
-                // Se o sintetizador de voz estiver tocando, pausar
-                if (speechSynthesis.speaking) {
-                    speechSynthesis.cancel();
-                    audioPlaying = false;
-                }
-                iniciarMonitorTempo();
-            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-                pararMonitorTempo();
-            }
-        }
-
         // Inicializar o jogo
         function iniciarJogo() {
             criarPalavras();
             atualizarProgresso();
             atualizarPlacar();
+            reproduzirTrechoAtual();
         }
 
-        // Iniciar o jogo
-        iniciarJogo();
-    </script>
-    <script src="https://www.youtube.com/iframe_api"></script>
-    
-    <!-- Adicionar div de overlay para prevenir interações com o player -->
-    <script>
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                let videoContainer = document.getElementById('video-container');
-                let overlay = document.createElement('div');
-                overlay.style.position = 'absolute';
-                overlay.style.top = '0';
-                overlay.style.left = '0';
-                overlay.style.width = '100%';
-                overlay.style.height = '100%';
-                overlay.style.zIndex = '10';
-                videoContainer.style.position = 'relative';
-                videoContainer.appendChild(overlay);
-            }, 1000);
-        });
-        
+        // Adicionar overlay para prevenir interações diretas com o vídeo
         window.addEventListener('load', function() {
             setTimeout(function() {
                 let videoContainer = document.getElementById('video-container');
@@ -786,6 +659,35 @@ All the small things you do`;
                 });
             }, 1000);
         });
+        
+        // Função para criar vídeo com o URL fornecido
+        function criarVideo(url) {
+            const videoContainer = document.getElementById('video-container');
+            videoContainer.innerHTML = ''; // Limpar container existente
+            
+            const video = document.createElement('video');
+            video.id = "custom-video";
+            video.controls = true;
+            
+            const source = document.createElement('source');
+            source.src = url;
+            source.type = 'video/mp4';
+            
+            video.appendChild(source);
+            videoContainer.appendChild(video);
+            
+            // Reconfigurar o videoElement para o novo elemento
+            videoElement = video;
+            
+            // Adicionar evento load para iniciar o jogo
+            videoElement.addEventListener('loadedmetadata', function() {
+                playerReady = true;
+                iniciarJogo();
+            });
+        }
+        
+        // Chamar a função para criar o vídeo
+        criarVideo(videoUrl);
     </script>
 </body>
 </html>
