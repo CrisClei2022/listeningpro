@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formador de Frase</title>
+    <style>
+        html {
+            background-color: #2b2e31; /* Cor de mate aplicada em todo o documento */
+            min-height: 100%;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #2b2e31; /* Cor de mate - verde acinzentado */
+            color: #333;
+        }
+        .palavra {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #a5b68f;
+            border-radius: 5px;
+            cursor: pointer;
+            user-select: none;
+            background-color: #f9fff2;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .errada {
+            background-color: #ff6666 !important;
+            transition: background-color 0.5s;
+        }
+        
+        .acertada {
+            background-color: #90ee90;
+            transition: background-color 0.5s;
+        }
+        
+        .palavra:hover {
+            background-color: #eef5e7;
+        }
+        
+        .frase {
+            font-size: 24px;
+            margin-bottom: 20px;
+            min-height: 60px;
+            border: 1px dashed #a5b68f;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap; /* Permite quebra automática das palavras */
+            align-items: center;
+            word-break: break-word; /* Garante quebra de palavras longas */
+            background-color: #f9fff2;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .palavra-na-frase {
+            margin-right: 8px; /* Espaço entre as palavras na frase */
+        }
+        
+        #botoes {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        #botao-avancar {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        /* Container para o progresso e placar */
+        .info-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        #progresso {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;            
+            color: #f9fff2;
+        }
+        
+        #placar {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-align: left;
+        }
+        
+        #video-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            position: relative;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background: linear-gradient(to bottom, #5cbc5c 0%, #4CAF50 50%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+        
+        button:hover {
+            background: linear-gradient(to bottom, #6ad26a 0%, #5cbc5c 50%, #4CAF50 100%);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            background: linear-gradient(to bottom, #45a049 0%, #4CAF50 50%, #5cbc5c 100%);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            transform: translateY(1px);
+        }
+        
+        #avancar {
+            background: linear-gradient(to bottom, #42a5f5 0%, #2196F3 50%, #0b7dda 100%);
+            font-weight: bold;
+            padding: 12px 20px;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        #avancar:hover {
+            background: linear-gradient(to bottom, #64b5f6 0%, #42a5f5 50%, #2196F3 100%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+        }
+        
+        #avancar:active {
+            background: linear-gradient(to bottom, #0b7dda 0%, #2196F3 50%, #42a5f5 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        #avancar {
+            background-color: #2196F3;
+            font-weight: bold;
+            padding: 12px 20px;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        #avancar:hover {
+            background-color: #0b7dda;
+        }
+        
+        
+    </style>
+</head>
+<body>
+
+    <div id="video-container"></div>
+    <div class="frase" id="frase"></div>
+    <div id="palavras"></div>
+    <div id="botoes">
+    
+        <div id="botoes">
+        
+        <button id="repetir" style="background: linear-gradient(to bottom, #ffc078 0%, #ffa94d 50%, #e59442 100%);">Repetir Trecho</button>
+        
+        <button id="lerFrase" style="background: linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%);">Ouvir Frase</button>
+        
+        <button id="desistir" style="background: linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%);">Desistir</button>
+        
+    </div>
+    
+    <div id="botao-avancar">
+        <button id="avancar" style="display: none;">Avançar</button>
+    </div>
+    </div>
+    <div id="botao-avancar">
+        <button id="avancar" style="display: none;">Avançar</button>
+    </div>
+    
+    <!-- Container para alinhar o progresso e o placar na mesma linha -->
+    <div class="info-container">
+        <div id="placar">Acertos: 0</div>
+        <div id="progresso">Progresso: 0 de 0</div>
+    </div>
+    
+
+    <script>
+        // Variáveis globais
+        let videoId = 'b_CpWmkhwq0';
+        let srt = `0
+00:00:00,667 --> 00:00:04,963
+When we're out in a crowd
+laughing loud
+
+1
+00:00:05,046 --> 00:00:08,383
+And nobody knows why
+
+2
+00:00:12,512 --> 00:00:16,850
+When we're lost at a club,
+getting drunk
+
+3
+00:00:16,933 --> 00:00:20,353
+And you give me that smile
+
+4
+00:00:24,524 --> 00:00:29,028
+Going home in
+the back of a car
+
+5
+00:00:29,112 --> 00:00:32,407
+And your hand touches mine
+
+6
+00:00:36,494 --> 00:00:39,414
+When we're done ***********
+
+7
+00:00:39,497 --> 00:00:44,502
+And you look up and give
+me those eyes
+
+8
+00:00:47,964 --> 00:00:53,928
+'Cause all of the small
+things that you do
+
+9
+00:00:54,012 --> 00:00:59,893
+Are what remind me why I
+fell for you
+
+10
+00:00:59,976 --> 00:01:05,982
+And when we're apart,
+and I'm missing you
+
+11
+00:01:06,065 --> 00:01:11,613
+I close my eyes and all
+I see is you
+
+12
+00:01:11,696 --> 00:01:14,824
+And the small things you do
+
+13
+00:01:24,626 --> 00:01:29,130
+When you call me at night
+while you're out
+
+14
+00:01:29,214 --> 00:01:32,592
+Getting high with
+your friends
+
+15
+00:01:32,675 --> 00:01:36,429
+(High with your friends)
+
+16
+00:01:36,513 --> 00:01:44,896
+Every "hi", every "bye", every "I
+love you" you've ever said
+
+17
+00:01:44,979 --> 00:01:48,107
+(You've ever said)
+
+18
+00:01:48,191 --> 00:01:53,988
+'Cause all of the small
+things that you do
+
+19
+00:01:54,072 --> 00:01:59,953
+Are what remind me why
+I fell for you
+
+20
+00:02:00,036 --> 00:02:06,000
+And when we're apart,
+and I'm missing you
+
+21
+00:02:06,084 --> 00:02:11,714
+I close my eyes and all I
+see is you
+
+22
+00:02:11,798 --> 00:02:14,926
+And the small things you do
+
+23
+00:02:36,698 --> 00:02:39,450
+When we're done ***********
+
+24
+00:02:39,534 --> 00:02:45,164
+And you look up and give
+me those eyes
+
+25
+00:02:47,876 --> 00:02:53,965
+'Cause all of the small
+things that you do
+
+26
+00:02:54,048 --> 00:03:00,054
+Are what remind me why
+I fell for you
+
+27
+00:03:00,138 --> 00:03:05,977
+And when we're apart,
+and I'm missing you
+
+28
+00:03:06,060 --> 00:03:11,774
+I close my eyes and all
+I see is you
+
+29
+00:03:11,858 --> 00:03:14,986
+And all I see is you and the
+small things you do
+
+30
+00:03:23,953 --> 00:03:26,998
+All the small things you do`;
+
+        // Processar as frases das legendas
+        let frases = srt.split('\n\n').map(bloco => {
+            let linhas = bloco.split('\n');
+            if (linhas.length < 3) return null;
+            
+            return {
+                tempoInicio: converterTempo(linhas[1].split(' --> ')[0].trim()),
+                tempoFim: converterTempo(linhas[1].split(' --> ')[1].trim()),
+                texto: linhas.slice(2).join(' ').trim()
+            };
+        }).filter(frase => frase !== null && frase.texto !== '');
+
+        let indiceFrase = 0;
+        let fraseAtual = frases[indiceFrase];
+        let palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+        let palavrasClicadas = [];
+        let palavraElementos = {};
+        let progresso = 0;
+        let acertos = 0;
+        let player;
+        let playerReady = false;
+        let monitorTempoId;
+        let fraseAcertada = false;
+        let audioPlaying = false; // Flag para controlar se o áudio está tocando
+
+        // Função para converter tempo de legenda para segundos
+        function converterTempo(tempo) {
+            let partes = tempo.split(',');
+            let segundos = partes[0].split(':');
+            return parseInt(segundos[0]) * 3600 + parseInt(segundos[1]) * 60 + parseInt(segundos[2]) + parseInt(partes[1]) / 1000;
+        }
+
+        // Função para monitorar o tempo do vídeo
+        function iniciarMonitorTempo() {
+            monitorTempoId = setInterval(() => {
+                if (player && playerReady) {
+                    let tempoAtual = player.getCurrentTime();
+                    if (tempoAtual >= fraseAtual.tempoFim) {
+                        player.pauseVideo();
+                        pararMonitorTempo();
+                    }
+                }
+            }, 100);
+        }
+
+        // Função para parar o monitor de tempo
+        function pararMonitorTempo() {
+            if (monitorTempoId) {
+                clearInterval(monitorTempoId);
+                monitorTempoId = null;
+            }
+        }
+
+        // Função para embaralhar palavras
+        function embaralharPalavras(frase) {
+            let palavras = frase.split(' ');
+            for (let i = palavras.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                let temp = palavras[i];
+                palavras[i] = palavras[j];
+                palavras[j] = temp;
+            }
+            return palavras;
+        }
+
+        // Função para criar elementos de palavras
+        function criarPalavras() {
+            let palavrasDiv = document.getElementById('palavras');
+            palavrasDiv.innerHTML = '';
+            palavraElementos = {};
+            
+            palavrasEmbaralhadas.forEach(palavra => {
+                let palavraDiv = document.createElement('div');
+                palavraDiv.classList.add('palavra');
+                palavraDiv.innerText = palavra;
+                palavraDiv.onclick = () => clicarPalavra(palavra, palavraDiv);
+                palavraElementos[palavra] = palavraDiv;
+                palavrasDiv.appendChild(palavraDiv);
+            });
+        }
+
+        // Função para lidar com o clique em uma palavra
+        function clicarPalavra(palavra, elemento) {
+            // Pausar qualquer áudio em reprodução antes de tocar o novo
+            pausarAudios();
+            
+            // Reproduzir a palavra
+            const utterance = new SpeechSynthesisUtterance(palavra);
+            utterance.lang = detectarIdioma(fraseAtual.texto);
+            
+            // Configurar flag para controlar áudio
+            audioPlaying = true;
+            utterance.onend = function() {
+                audioPlaying = false;
+            };
+            
+            speechSynthesis.speak(utterance);
+            
+            if (elemento.classList.contains('acertada')) {
+                return; // Palavra já foi usada
+            }
+            
+            let fraseSplit = fraseAtual.texto.split(' ');
+            if (palavrasClicadas.length < fraseSplit.length && fraseSplit[palavrasClicadas.length] === palavra) {
+                palavrasClicadas.push(palavra);
+                elemento.classList.add('acertada');
+                atualizarFrase();
+                verificarFrase();
+            } else {
+                // Adicionamos a classe errada e removemos após 500ms
+                elemento.classList.add('errada');
+                setTimeout(() => {
+                    elemento.classList.remove('errada');
+                }, 500);
+            }
+        }
+
+        // Função para pausar todos os áudios
+        function pausarAudios() {
+            // Pausar o sintetizador de voz
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+                audioPlaying = false;
+            }
+            
+            // Pausar o vídeo se estiver tocando
+            if (playerReady && player && player.getPlayerState() === YT.PlayerState.PLAYING) {
+                player.pauseVideo();
+            }
+        }
+
+        // Função para detectar o idioma com base no texto
+        function detectarIdioma(texto) {
+            // Esta é uma detecção simples
+            if (texto.includes('Aku') || texto.includes('kamu')) {
+                return 'id-ID'; // Indonésio
+            }
+            return 'en-US'; // Por padrão, usamos inglês
+        }
+
+        // Função para atualizar a frase exibida
+        function atualizarFrase() {
+            let fraseDiv = document.getElementById('frase');
+            fraseDiv.innerHTML = '';
+            
+            // Adicionar as palavras já clicadas com espaço entre elas
+            palavrasClicadas.forEach((palavra, index) => {
+                const span = document.createElement('span');
+                span.textContent = palavra;
+                span.classList.add('palavra-na-frase'); // Adiciona classe para estilização
+                fraseDiv.appendChild(span);
+                
+                // Não adicionar espaço após a última palavra
+                if (index < palavrasClicadas.length - 1) {
+                    // Espaço já está sendo adicionado via CSS com margin-right
+                }
+            });
+        }
+
+        // Função para verificar se a frase está completa
+        function verificarFrase() {
+            if (palavrasClicadas.join(' ') === fraseAtual.texto) {
+                document.getElementById('avancar').style.display = 'inline-block';
+                if (playerReady && player) {
+                    player.pauseVideo();
+                }
+                progresso++;
+                fraseAcertada = true;
+                acertos++;
+                atualizarPlacar();
+                atualizarProgresso();
+            }
+        }
+
+        // Função para ler a frase atual usando o sintetizador de voz
+        function lerFraseAtual() {
+            // Pausar qualquer áudio em reprodução
+            pausarAudios();
+            
+            const utterance = new SpeechSynthesisUtterance(fraseAtual.texto);
+            utterance.lang = detectarIdioma(fraseAtual.texto);
+            
+            // Configurar flag para controlar áudio
+            audioPlaying = true;
+            utterance.onend = function() {
+                audioPlaying = false;
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        // Função para atualizar o progresso
+        function atualizarProgresso() {
+            document.getElementById('progresso').innerText = `Progresso: ${progresso} de ${frases.length}`;
+        }
+
+        // Função para atualizar o placar
+        function atualizarPlacar() {
+            document.getElementById('placar').innerText = `Acertos: ${acertos}`;
+        }
+
+        // Função para reproduzir o trecho do vídeo atual
+        function reproduzirTrechoAtual() {
+            // Verificar se o sintetizador de voz está tocando
+            if (audioPlaying) {
+                pausarAudios();
+            }
+            
+            if (playerReady && player) {
+                player.seekTo(fraseAtual.tempoInicio);
+                player.playVideo();
+                iniciarMonitorTempo();
+            }
+        }
+
+        // Evento para avançar para a próxima frase
+        document.getElementById('avancar').onclick = function() {
+            indiceFrase++;
+            if (indiceFrase >= frases.length) {
+                alert("Parabéns! Você completou todas as frases!");
+                indiceFrase = 0;
+                acertos = 0;
+                progresso = 0;
+                atualizarPlacar();
+                atualizarProgresso();
+            }
+            fraseAtual = frases[indiceFrase];
+            palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+            palavrasClicadas = [];
+            fraseAcertada = false;
+            criarPalavras();
+            atualizarFrase();
+            document.getElementById('avancar').style.display = 'none';
+            reproduzirTrechoAtual();
+        };
+
+        // Evento para desistir da frase atual
+        document.getElementById('desistir').onclick = function() {
+            palavrasClicadas = fraseAtual.texto.split(' ');
+            atualizarFrase();
+            
+            Object.keys(palavraElementos).forEach(palavra => {
+                if (fraseAtual.texto.split(' ').includes(palavra)) {
+                    palavraElementos[palavra].classList.add('acertada');
+                }
+            });
+            
+            if (!fraseAcertada) {
+                progresso++;
+                atualizarProgresso();
+            }
+            
+            document.getElementById('avancar').style.display = 'inline-block';
+        };
+
+        // Evento para repetir o trecho de vídeo atual
+        document.getElementById('repetir').onclick = function() {
+            reproduzirTrechoAtual();
+        };
+
+        // Evento para ler a frase atual
+        document.getElementById('lerFrase').onclick = function() {
+            lerFraseAtual();
+        };
+
+        // Função que é chamada quando a API do YouTube está pronta
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('video-container', {
+                videoId: videoId,
+                playerVars: {
+                    autoplay: 0, // Não iniciar automaticamente
+                    controls: 0, // Ocultar controles
+                    rel: 0, // Não mostrar vídeos relacionados
+                    fs: 0, // Desativar botão de tela cheia
+                    modestbranding: 1, // Remover logo do YouTube
+                    disablekb: 1, // Desativar controles de teclado
+                    iv_load_policy: 3, // Ocultar anotações
+                    showinfo: 0, // Ocultar informações do vídeo
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        // Função chamada quando o player está pronto
+        function onPlayerReady(event) {
+            playerReady = true;
+            // Desativar interação com o vídeo
+            let iframe = document.querySelector('#video-container iframe');
+            if (iframe) {
+                iframe.style.pointerEvents = 'none';
+            }
+            reproduzirTrechoAtual();
+        }
+
+        // Função chamada quando o estado do player muda
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                // Se o sintetizador de voz estiver tocando, pausar
+                if (speechSynthesis.speaking) {
+                    speechSynthesis.cancel();
+                    audioPlaying = false;
+                }
+                iniciarMonitorTempo();
+            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                pararMonitorTempo();
+            }
+        }
+
+        // Inicializar o jogo
+        function iniciarJogo() {
+            criarPalavras();
+            atualizarProgresso();
+            atualizarPlacar();
+        }
+
+        // Iniciar o jogo
+        iniciarJogo();
+    </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
+    <!-- Adicionar div de overlay para prevenir interações com o player -->
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                let videoContainer = document.getElementById('video-container');
+                let overlay = document.createElement('div');
+                overlay.style.position = 'absolute';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.zIndex = '10';
+                videoContainer.style.position = 'relative';
+                videoContainer.appendChild(overlay);
+            }, 1000);
+        });
+        
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                let videoContainer = document.getElementById('video-container');
+                let overlay = document.createElement('div');
+                overlay.style.position = 'absolute';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.zIndex = '10';
+                videoContainer.style.position = 'relative';
+                videoContainer.appendChild(overlay);
+                
+                // Adicionar estilos de hover para botões específicos
+                document.getElementById('desistir').addEventListener('mouseenter', function() {
+                    this.style.background = 'linear-gradient(to bottom, #ff8a8a 0%, #ff7878 50%, #ff6666 100%)';
+                });
+                document.getElementById('desistir').addEventListener('mouseleave', function() {
+                    this.style.background = 'linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%)';
+                });
+                document.getElementById('desistir').addEventListener('mousedown', function() {
+                    this.style.background = 'linear-gradient(to bottom, #e55c5c 0%, #ff6666 50%, #ff7878 100%)';
+                });
+                document.getElementById('desistir').addEventListener('mouseup', function() {
+                    this.style.background = 'linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%)';
+                });
+                
+                document.getElementById('repetir').addEventListener('mouseenter', function() {
+                    this.style.background = 'linear-gradient(to bottom, #ffca8a 0%, #ffc078 50%, #ffa94d 100%)';
+                });
+                document.getElementById('repetir').addEventListener('mouseleave', function() {
+                    this.style.background = 'linear-gradient(to bottom, #ffc078 0%, #ffa94d 50%, #e59442 100%)';
+                });
+                document.getElementById('repetir').addEventListener('mousedown', function() {
+                    this.style.background = 'linear-gradient(to bottom, #e59442 0%, #ffa94d 50%, #ffc078 100%)';
+                });
+                document.getElementById('repetir').addEventListener('mouseup', function() {
+                    this.style.background = 'linear-gradient(to bottom, #ffc078 0%, #ffa94d 50%, #e59442 100%)';
+                });
+                
+                document.getElementById('lerFrase').addEventListener('mouseenter', function() {
+                    this.style.background = 'linear-gradient(to bottom, #8acaff 0%, #78c0ff 50%, #5babf0 100%)';
+                });
+                document.getElementById('lerFrase').addEventListener('mouseleave', function() {
+                    this.style.background = 'linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%)';
+                });
+                document.getElementById('lerFrase').addEventListener('mousedown', function() {
+                    this.style.background = 'linear-gradient(to bottom, #4d98e5 0%, #5babf0 50%, #78c0ff 100%)';
+                });
+                document.getElementById('lerFrase').addEventListener('mouseup', function() {
+                    this.style.background = 'linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%)';
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
