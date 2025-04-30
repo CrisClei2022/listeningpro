@@ -1,1 +1,51 @@
-index
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ListeningPro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .link-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .link-list li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ListeningPro</h1>
+    <ul class="link-list" id="linkList"></ul>
+
+    <script>
+        // Sua lista de nomes
+        const nomes = [
+            "New West - Those Eyes",
+            "Melanie Martinez - The Contortionist",
+            // Adicione mais nomes aqui...
+        ];
+
+        const linkList = document.getElementById('linkList');
+
+        nomes.forEach(nome => {
+            // Codifica o nome para usar em URL
+            const encodedName = encodeURIComponent(nome + '.html');
+            const link = `https://crisclei2022.github.io/listeningpro/${encodedName}`;
+
+            // Cria o elemento de lista
+            const listItem = document.createElement('li');
+            const anchor = document.createElement('a');
+            anchor.href = link;
+            anchor.textContent = nome;
+
+            listItem.appendChild(anchor);
+            linkList.appendChild(listItem);
+        });
+    </script>
+</body>
+</html>
