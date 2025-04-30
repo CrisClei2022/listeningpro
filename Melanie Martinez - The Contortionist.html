@@ -3,11 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Melanie Martinez - The Contortionist</title>
     <style>
         html {
@@ -167,8 +162,8 @@
     <div class="frase" id="frase"></div>
     <div id="palavras"></div>
     <div id="botoes">
-        <button id="repetir" style="background: linear-gradient(to bottom, #ffc078 0%, #ffa94d 50%, #e59442 100%);">Repetir Trecho</button>
-        <button id="lerFrase" style="background: linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%);">Ouvir Frase</button>
+        <button id="repetir" style="background: linear-gradient(to bottom, #ffc078 0%, #ffa94d 50%, #e59442 100%);">Tocar Trecho</button>
+        <button id="lerFrase" style="background: linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%);">Voz Sintetica</button>
         <button id="desistir" style="background: linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%);">Desistir</button>
     </div>
     
@@ -187,9 +182,8 @@
         // Variáveis globais
         let videoUrl = 'https://files.catbox.moe/vxoldg.mp4'; // URL do vídeo atualizado
         let srt = `0
-0
 00:00:00,000 --> 00:00:00,000
-Melanie Martinez - The Contortionist.html
+Melanie Martinez - The Contortionist
 
 1
 00:00:08,100 --> 00:00:10,700
@@ -416,7 +410,7 @@ touching) Touchin' me
 49
 00:03:01,200 --> 00:03:04,700
 Oh, ow
-
+`;
 
         // Configuração do player de vídeo
         const videoElement = document.getElementById('custom-video');
@@ -723,64 +717,8 @@ Oh, ow
                 document.getElementById('desistir').addEventListener('mouseup', function() {
                     this.style.background = 'linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%)';
                 });
-                
-                document.getElementById('repetir').addEventListener('mouseenter', function() {
-                    this.style.background = 'linear-gradient(to bottom, #ffca8a 0%, #ffc078 50%, #ffa94d 100%)';
-                });
-                document.getElementById('repetir').addEventListener('mouseleave', function() {
-                    this.style.background = 'linear-gradient(to bottom, #ffc078 0%, #ffa94d 50%, #e59442 100%)';
-                });
-                document.getElementById('repetir').addEventListener('mousedown', function() {
-                    this.style.background = 'linear-gradient(to bottom, #e59442 0%, #ffa94d 50%, #ffc078 100%)';
-                });
-                document.getElementById('repetir').addEventListener('mouseup', function() {
-                    this.style.background = 'linear-gradient(to bottom, #ffc078 0%, #ffa94d 50%, #e59442 100%)';
-                });
-                
-                document.getElementById('lerFrase').addEventListener('mouseenter', function() {
-                    this.style.background = 'linear-gradient(to bottom, #8acaff 0%, #78c0ff 50%, #5babf0 100%)';
-                });
-                document.getElementById('lerFrase').addEventListener('mouseleave', function() {
-                    this.style.background = 'linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%)';
-                });
-                document.getElementById('lerFrase').addEventListener('mousedown', function() {
-                    this.style.background = 'linear-gradient(to bottom, #4d98e5 0%, #5babf0 50%, #78c0ff 100%)';
-                });
-                document.getElementById('lerFrase').addEventListener('mouseup', function() {
-                    this.style.background = 'linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%)';
-                });
-            }, 1000);
+            }, 500);
         });
-        
-        // Função para criar vídeo com o URL fornecido
-        function criarVideo(url) {
-            const videoContainer = document.getElementById('video-container');
-            videoContainer.innerHTML = ''; // Limpar container existente
-            
-            const video = document.createElement('video');
-            video.id = "custom-video";
-            video.controls = true;
-            
-            const source = document.createElement('source');
-            source.src = url;
-            source.type = 'video/mp4';
-            
-            video.appendChild(source);
-            videoContainer.appendChild(video);
-            
-            // Reconfigurar o videoElement para o novo elemento
-            videoElement = video;
-            
-            // Adicionar evento load para iniciar o jogo
-            videoElement.addEventListener('loadedmetadata', function() {
-                playerReady = true;
-                iniciarJogo();
-            });
-        }
-        
-        // Chamar a função para criar o vídeo
-        criarVideo(videoUrl);
     </script>
 </body>
-</html></title>
-    
+</html>
