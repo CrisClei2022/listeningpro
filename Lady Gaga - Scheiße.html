@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lady Gaga - Scheiße</title>
+    <style>
+        html {
+            background-color: #2b2e31; /* Cor de mate aplicada em todo o documento */
+            min-height: 100%;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #2b2e31; /* Cor de mate - verde acinzentado */
+            color: #333;
+        }
+        .palavra {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px;
+            border: 1px solid #a5b68f;
+            border-radius: 5px;
+            cursor: pointer;
+            user-select: none;
+            background-color: #f9fff2;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .errada {
+            background-color: #ff6666 !important;
+            transition: background-color 0.5s;
+        }
+        
+        .acertada {
+            background-color: #90ee90;
+            transition: background-color 0.5s;
+        }
+        
+        .palavra:hover {
+            background-color: #eef5e7;
+        }
+        
+        .frase {
+            font-size: 24px;
+            margin-bottom: 20px;
+            min-height: 60px;
+            border: 1px dashed #a5b68f;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap; /* Permite quebra automática das palavras */
+            align-items: center;
+            word-break: break-word; /* Garante quebra de palavras longas */
+            background-color: #f9fff2;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .palavra-na-frase {
+            margin-right: 8px; /* Espaço entre as palavras na frase */
+        }
+        
+        #botoes {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        #botao-avancar {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        /* Container para o progresso e placar */
+        .info-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        #progresso {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;            
+            color: #f9fff2;
+        }
+        
+        #placar {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-align: left;
+        }
+        
+        #video-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            position: relative;
+            background-color: #000;
+        }
+        
+        #custom-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background: linear-gradient(to bottom, #5cbc5c 0%, #4CAF50 50%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+        
+        button:hover {
+            background: linear-gradient(to bottom, #6ad26a 0%, #5cbc5c 50%, #4CAF50 100%);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            background: linear-gradient(to bottom, #45a049 0%, #4CAF50 50%, #5cbc5c 100%);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            transform: translateY(1px);
+        }
+        
+        #avancar {
+            background: linear-gradient(to bottom, #42a5f5 0%, #2196F3 50%, #0b7dda 100%);
+            font-weight: bold;
+            padding: 12px 20px;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        #avancar:hover {
+            background: linear-gradient(to bottom, #64b5f6 0%, #42a5f5 50%, #2196F3 100%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+        }
+        
+        #avancar:active {
+            background: linear-gradient(to bottom, #0b7dda 0%, #2196F3 50%, #42a5f5 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="video-container">
+        <video id="custom-video" controls>
+            <source src="https://files.catbox.moe/noor8m.mp4" type="video/mp4">
+            Seu navegador não suporta vídeos HTML5.
+        </video>
+    </div>
+    <div class="frase" id="frase"></div>
+    <div id="palavras"></div>
+    <div id="botoes">
+        <button id="repetir" style="background: linear-gradient(to bottom, #ffc078 0%, #ffa94d 50%, #e59442 100%);">Tocar Trecho</button>
+        <button id="lerFrase" style="background: linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%);">Voz Sintetica</button>
+        <button id="desistir" style="background: linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%);">Desistir</button>
+    </div>
+    
+    <div id="botao-avancar">
+        <button id="avancar" style="display: none;">Avançar</button>
+    </div>
+    
+    <!-- Container para alinhar o progresso e o placar na mesma linha -->
+    <div class="info-container">
+        <div id="placar">Acertos: 0</div>
+        <div id="progresso">Progresso: 0 de 0</div>
+    </div>
+    
+
+    <script>
+        // Variáveis globais
+        let videoUrl = 'https://files.catbox.moe/noor8m.mp4'; // URL do vídeo atualizado
+        let srt = `0
+00:00:00,200 --> 00:00:03,500
+I don't speak German but I can
+if you like
+
+1
+00:00:03,600 --> 00:00:07,300
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+2
+00:00:07,400 --> 00:00:11,200
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+3
+00:00:11,300 --> 00:00:14,600
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+4
+00:00:14,700 --> 00:00:18,600
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+5
+00:00:18,800 --> 00:00:21,900
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+6
+00:00:22,100 --> 00:00:25,700
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+7
+00:00:25,900 --> 00:00:29,300
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+8
+00:00:29,500 --> 00:00:33,100
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+9
+00:00:33,300 --> 00:00:36,600
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+10
+00:00:36,800 --> 00:00:40,300
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+11
+00:00:40,500 --> 00:00:43,900
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+12
+00:00:44,100 --> 00:00:47,800
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+13
+00:00:48,000 --> 00:00:51,400
+I'll take you out tonight do
+whatever you like
+
+14
+00:00:51,600 --> 00:00:55,100
+Scheiße, Scheiße be mine, Scheiße be mine
+
+15
+00:00:55,300 --> 00:00:58,500
+Put on a show tonight do
+whatever you like
+
+16
+00:00:58,700 --> 00:01:03,350
+Scheiße, Scheiße be mine, Scheiße be mine
+
+17
+00:01:03,500 --> 00:01:04,900
+When I am on a mission
+
+18
+00:01:05,200 --> 00:01:06,800
+I rebuke my condition
+
+19
+00:01:07,000 --> 00:01:08,600
+If you're a strong female
+
+20
+00:01:08,800 --> 00:01:10,400
+You don't need permission
+
+21
+00:01:10,600 --> 00:01:12,750
+I, I wish that I could dance
+
+22
+00:01:12,850 --> 00:01:14,250
+On a single fare
+
+23
+00:01:14,350 --> 00:01:16,050
+I, I wish I could be strong
+
+24
+00:01:16,150 --> 00:01:17,750
+Without somebody there
+
+25
+00:01:18,000 --> 00:01:20,000
+I, I wish that I could dance
+
+26
+00:01:20,100 --> 00:01:21,900
+On a single fare
+
+27
+00:01:22,050 --> 00:01:23,550
+I wish I could be strong
+
+28
+00:01:23,650 --> 00:01:25,550
+Without the Scheiße yeah
+
+29
+00:01:25,750 --> 00:01:28,850
+Without the Scheiße yeah
+
+30
+00:01:29,050 --> 00:01:32,350
+Without the Scheiße yeah
+
+31
+00:01:32,550 --> 00:01:36,250
+Without the Scheiße yeah
+
+32
+00:01:37,750 --> 00:01:42,650
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+33
+00:01:42,750 --> 00:01:46,350
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+34
+00:01:46,450 --> 00:01:49,950
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+35
+00:01:50,050 --> 00:01:53,750
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+36
+00:01:53,850 --> 00:01:55,550
+Now there's objectified
+
+37
+00:01:55,650 --> 00:01:57,350
+By what men say is right
+
+38
+00:01:57,450 --> 00:01:59,150
+Scheiße, Scheiße be mine,
+
+39
+00:01:59,150 --> 00:02:01,050
+Bullshit be mine
+
+40
+00:02:01,250 --> 00:02:04,750
+Blonde high-heeled feminist
+enlisting femmes for this
+
+41
+00:02:04,850 --> 00:02:09,150
+Express your woman-kind fight
+for your right
+
+42
+00:02:09,200 --> 00:02:10,700
+When I am on a mission
+
+43
+00:02:10,900 --> 00:02:12,800
+I rebuke my condition
+
+44
+00:02:13,000 --> 00:02:14,800
+If you're a strong female
+
+45
+00:02:15,000 --> 00:02:16,400
+You don't need permission
+
+46
+00:02:16,600 --> 00:02:18,800
+I, I wish that I could dance
+
+47
+00:02:18,900 --> 00:02:20,200
+On a single fare
+
+48
+00:02:20,300 --> 00:02:21,900
+I, I wish I could be strong
+
+49
+00:02:22,100 --> 00:02:23,600
+Without somebody there
+
+50
+00:02:23,900 --> 00:02:26,100
+I, I wish that I could dance
+
+51
+00:02:26,200 --> 00:02:28,100
+On a single fare
+
+52
+00:02:28,200 --> 00:02:29,600
+I wish I could be strong
+
+53
+00:02:29,700 --> 00:02:31,500
+Without the Scheiße yeah
+
+54
+00:02:31,700 --> 00:02:34,900
+Without the Scheiße yeah
+
+55
+00:02:35,100 --> 00:02:38,500
+Without the Scheiße yeah
+
+56
+00:02:38,700 --> 00:02:43,700
+Without the Scheiße yeah
+
+57
+00:02:43,900 --> 00:02:45,900
+Without the Scheiße yeah
+
+58
+00:02:46,100 --> 00:02:53,300
+I don't speak German,
+but I can if you like
+
+59
+00:02:53,500 --> 00:03:00,900
+I don't speak German,
+but I can if you like
+
+60
+00:03:01,000 --> 00:03:02,700
+I wish that I could dance
+
+61
+00:03:02,800 --> 00:03:04,000
+On a single fare
+
+62
+00:03:04,200 --> 00:03:06,200
+I wish I could be strong
+
+63
+00:03:06,300 --> 00:03:07,900
+Without permission, yeah
+
+64
+00:03:08,100 --> 00:03:10,100
+I, I wish that I could dance
+
+65
+00:03:10,200 --> 00:03:11,900
+On a single fare
+
+66
+00:03:11,900 --> 00:03:13,500
+I wish I could be strong
+
+67
+00:03:13,600 --> 00:03:14,700
+Without the Scheiße yeah
+
+68
+00:03:15,300 --> 00:03:18,700
+Without the Scheiße yeah
+
+69
+00:03:18,900 --> 00:03:22,200
+Without the Scheiße yeah
+
+70
+00:03:22,400 --> 00:03:25,800
+Without the Scheiße yeah
+
+71
+00:03:26,000 --> 00:03:29,100
+Without the Scheiße
+
+72
+00:03:29,200 --> 00:03:31,900
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+73
+00:03:32,600 --> 00:03:36,200
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+74
+00:03:36,250 --> 00:03:39,750
+Ich schleiban austa be clair,
+es kumpent üske monstère,
+
+75
+00:03:39,900 --> 00:03:43,900
+Aus-be aus-can-be flaugen,
+fräulein uske-be clair
+
+76
+00:03:44,000 --> 00:03:46,200
+www.RentAnAdviser.com
+`;
+
+        // Configuração do player de vídeo
+        const videoElement = document.getElementById('custom-video');
+        videoElement.src = videoUrl;
+        
+        // Processar as frases das legendas
+        let frases = srt.split('\n\n').map(bloco => {
+            let linhas = bloco.split('\n');
+            if (linhas.length < 3) return null;
+            
+            return {
+                tempoInicio: converterTempo(linhas[1].split(' --> ')[0].trim()),
+                tempoFim: converterTempo(linhas[1].split(' --> ')[1].trim()),
+                texto: linhas.slice(2).join(' ').trim()
+            };
+        }).filter(frase => frase !== null && frase.texto !== '');
+
+        let indiceFrase = 0;
+        let fraseAtual = frases[indiceFrase];
+        let palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+        let palavrasClicadas = [];
+        let palavraElementos = {};
+        let progresso = 0;
+        let acertos = 0;
+        let playerReady = false;
+        let monitorTempoId;
+        let fraseAcertada = false;
+        let audioPlaying = false;
+
+        // Função para converter tempo de legenda para segundos
+        function converterTempo(tempo) {
+            let partes = tempo.split(',');
+            let segundos = partes[0].split(':');
+            return parseInt(segundos[0]) * 3600 + parseInt(segundos[1]) * 60 + parseInt(segundos[2]) + parseInt(partes[1]) / 1000;
+        }
+
+        // Evento que ocorre quando o vídeo está pronto
+        videoElement.addEventListener('loadedmetadata', function() {
+            playerReady = true;
+            // Iniciar o jogo após o vídeo estar pronto
+            iniciarJogo();
+        });
+
+        // Função para monitorar o tempo do vídeo
+        function iniciarMonitorTempo() {
+            monitorTempoId = setInterval(() => {
+                if (playerReady) {
+                    let tempoAtual = videoElement.currentTime;
+                    if (tempoAtual >= fraseAtual.tempoFim) {
+                        videoElement.pause();
+                        pararMonitorTempo();
+                    }
+                }
+            }, 100);
+        }
+
+        // Função para parar o monitor de tempo
+        function pararMonitorTempo() {
+            if (monitorTempoId) {
+                clearInterval(monitorTempoId);
+                monitorTempoId = null;
+            }
+        }
+
+        // Função para embaralhar palavras
+        function embaralharPalavras(frase) {
+            let palavras = frase.split(' ');
+            for (let i = palavras.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                let temp = palavras[i];
+                palavras[i] = palavras[j];
+                palavras[j] = temp;
+            }
+            return palavras;
+        }
+
+        // Função para criar elementos de palavras
+        function criarPalavras() {
+            let palavrasDiv = document.getElementById('palavras');
+            palavrasDiv.innerHTML = '';
+            palavraElementos = {};
+            
+            palavrasEmbaralhadas.forEach(palavra => {
+                let palavraDiv = document.createElement('div');
+                palavraDiv.classList.add('palavra');
+                palavraDiv.innerText = palavra;
+                palavraDiv.onclick = () => clicarPalavra(palavra, palavraDiv);
+                palavraElementos[palavra] = palavraDiv;
+                palavrasDiv.appendChild(palavraDiv);
+            });
+        }
+
+        // Função para lidar com o clique em uma palavra
+        function clicarPalavra(palavra, elemento) {
+            // Pausar qualquer áudio em reprodução antes de tocar o novo
+            pausarAudios();
+            
+            // Reproduzir a palavra
+            const utterance = new SpeechSynthesisUtterance(palavra);
+            utterance.lang = detectarIdioma(fraseAtual.texto);
+            
+            // Configurar flag para controlar áudio
+            audioPlaying = true;
+            utterance.onend = function() {
+                audioPlaying = false;
+            };
+            
+            speechSynthesis.speak(utterance);
+            
+            if (elemento.classList.contains('acertada')) {
+                return; // Palavra já foi usada
+            }
+            
+            let fraseSplit = fraseAtual.texto.split(' ');
+            if (palavrasClicadas.length < fraseSplit.length && fraseSplit[palavrasClicadas.length] === palavra) {
+                palavrasClicadas.push(palavra);
+                elemento.classList.add('acertada');
+                atualizarFrase();
+                verificarFrase();
+            } else {
+                // Adicionamos a classe errada e removemos após 500ms
+                elemento.classList.add('errada');
+                setTimeout(() => {
+                    elemento.classList.remove('errada');
+                }, 500);
+            }
+        }
+
+        // Função para pausar todos os áudios
+        function pausarAudios() {
+            // Pausar o sintetizador de voz
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+                audioPlaying = false;
+            }
+            
+            // Pausar o vídeo se estiver tocando
+            if (playerReady && !videoElement.paused) {
+                videoElement.pause();
+            }
+        }
+
+        // Função para detectar o idioma com base no texto
+        function detectarIdioma(texto) {
+            // Esta é uma detecção simples
+            if (texto.includes('Aku') || texto.includes('kamu')) {
+                return 'id-ID'; // Indonésio
+            }
+            return 'en-US'; // Por padrão, usamos inglês
+        }
+
+        // Função para atualizar a frase exibida
+        function atualizarFrase() {
+            let fraseDiv = document.getElementById('frase');
+            fraseDiv.innerHTML = '';
+            
+            // Adicionar as palavras já clicadas com espaço entre elas
+            palavrasClicadas.forEach((palavra, index) => {
+                const span = document.createElement('span');
+                span.textContent = palavra;
+                span.classList.add('palavra-na-frase'); // Adiciona classe para estilização
+                fraseDiv.appendChild(span);
+            });
+        }
+
+        // Função para verificar se a frase está completa
+        function verificarFrase() {
+            if (palavrasClicadas.join(' ') === fraseAtual.texto) {
+                document.getElementById('avancar').style.display = 'inline-block';
+                if (playerReady && !videoElement.paused) {
+                    videoElement.pause();
+                }
+                progresso++;
+                fraseAcertada = true;
+                acertos++;
+                atualizarPlacar();
+                atualizarProgresso();
+            }
+        }
+
+        // Função para ler a frase atual usando o sintetizador de voz
+        function lerFraseAtual() {
+            // Pausar qualquer áudio em reprodução
+            pausarAudios();
+            
+            const utterance = new SpeechSynthesisUtterance(fraseAtual.texto);
+            utterance.lang = detectarIdioma(fraseAtual.texto);
+            
+            // Configurar flag para controlar áudio
+            audioPlaying = true;
+            utterance.onend = function() {
+                audioPlaying = false;
+            };
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        // Função para atualizar o progresso
+        function atualizarProgresso() {
+            document.getElementById('progresso').innerText = `Progresso: ${progresso} de ${frases.length}`;
+        }
+
+        // Função para atualizar o placar
+        function atualizarPlacar() {
+            document.getElementById('placar').innerText = `Acertos: ${acertos}`;
+        }
+
+        // Função para reproduzir o trecho do vídeo atual
+        function reproduzirTrechoAtual() {
+            // Verificar se o sintetizador de voz está tocando
+            if (audioPlaying) {
+                pausarAudios();
+            }
+            
+            if (playerReady) {
+                videoElement.currentTime = fraseAtual.tempoInicio;
+                videoElement.play();
+                iniciarMonitorTempo();
+            }
+        }
+
+        // Evento para avançar para a próxima frase
+        document.getElementById('avancar').onclick = function() {
+            indiceFrase++;
+            if (indiceFrase >= frases.length) {
+                alert("Parabéns! Você completou todas as frases!");
+                indiceFrase = 0;
+                acertos = 0;
+                progresso = 0;
+                atualizarPlacar();
+                atualizarProgresso();
+            }
+            fraseAtual = frases[indiceFrase];
+            palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+            palavrasClicadas = [];
+            fraseAcertada = false;
+            criarPalavras();
+            atualizarFrase();
+            document.getElementById('avancar').style.display = 'none';
+            reproduzirTrechoAtual();
+        };
+
+        // Evento para desistir da frase atual
+        document.getElementById('desistir').onclick = function() {
+            palavrasClicadas = fraseAtual.texto.split(' ');
+            atualizarFrase();
+            
+            Object.keys(palavraElementos).forEach(palavra => {
+                if (fraseAtual.texto.split(' ').includes(palavra)) {
+                    palavraElementos[palavra].classList.add('acertada');
+                }
+            });
+            
+            if (!fraseAcertada) {
+                progresso++;
+                atualizarProgresso();
+            }
+            
+            document.getElementById('avancar').style.display = 'inline-block';
+        };
+
+        // Evento para repetir o trecho de vídeo atual
+        document.getElementById('repetir').onclick = function() {
+            reproduzirTrechoAtual();
+        };
+
+        // Evento para ler a frase atual
+        document.getElementById('lerFrase').onclick = function() {
+            lerFraseAtual();
+        };
+
+        // Inicializar o jogo
+        function iniciarJogo() {
+            criarPalavras();
+            atualizarProgresso();
+            atualizarPlacar();
+            reproduzirTrechoAtual();
+        }
+
+        // Adicionar overlay para prevenir interações diretas com o vídeo
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                let videoContainer = document.getElementById('video-container');
+                let overlay = document.createElement('div');
+                overlay.style.position = 'absolute';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.zIndex = '10';
+                videoContainer.style.position = 'relative';
+                videoContainer.appendChild(overlay);
+                
+                // Adicionar estilos de hover para botões específicos
+                document.getElementById('desistir').addEventListener('mouseenter', function() {
+                    this.style.background = 'linear-gradient(to bottom, #ff8a8a 0%, #ff7878 50%, #ff6666 100%)';
+                });
+                document.getElementById('desistir').addEventListener('mouseleave', function() {
+                    this.style.background = 'linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%)';
+                });
+                document.getElementById('desistir').addEventListener('mousedown', function() {
+                    this.style.background = 'linear-gradient(to bottom, #e55c5c 0%, #ff6666 50%, #ff7878 100%)';
+                });
+                document.getElementById('desistir').addEventListener('mouseup', function() {
+                    this.style.background = 'linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%)';
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>
