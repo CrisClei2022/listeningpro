@@ -154,45 +154,48 @@
         }
         
         /* Menu Button and Menu Styles */
-        #menu-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            border: none;
-            cursor: pointer;
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
-        }
+		/* Menu Button and Menu Styles */
+		#menu-button {
+		    position: fixed;
+		    top: 20px;
+		    right: 20px;
+		    width: 60px;
+		    height: 60px;
+		    border-radius: 50%;
+		    background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+		    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+		    border: none;
+		    cursor: pointer;
+		    z-index: 1000;
+		    display: flex;
+		    justify-content: center;
+		    align-items: center;
+		    transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+		    padding: 0; /* Removendo padding que pode interferir */
+		}
         
         #menu-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.4);
-        }
-        
-        .menu-icon {
-            width: 30px;
-            height: 3px;
-            background-color: white;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-        
-        .menu-icon:before, .menu-icon:after {
-            content: '';
-            position: absolute;
-            width: 30px;
-            height: 3px;
-            background-color: white;
-            transition: all 0.3s ease;
-        }
+		    transform: scale(1.1);
+		    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+		}
+		
+		.menu-icon {
+		    width: 30px;
+		    height: 3px;
+		    background-color: white;
+		    position: relative;
+		    transition: all 0.3s ease;
+		}
+		
+		.menu-icon:before, .menu-icon:after {
+		    content: '';
+		    position: absolute;
+		    width: 30px;
+		    height: 3px;
+		    background-color: white;
+		    transition: all 0.3s ease;
+		    left: 0; /* Garantir alinhamento horizontal */
+		}
         
         .menu-icon:before {
             transform: translateY(-10px);
@@ -296,48 +299,70 @@
         }
         
         .close-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            z-index: 1001;
-        }
-        
-        .close-button:hover {
-            background: rgba(255, 255, 255, 0.4);
-            transform: rotate(90deg);
-        }
-        
-        .close-icon {
-            position: relative;
-            width: 20px;
-            height: 20px;
-        }
-        
-        .close-icon:before, .close-icon:after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 2px;
-            background-color: white;
-            top: 9px;
-        }
-        
-        .close-icon:before {
-            transform: rotate(45deg);
-        }
-        
-        .close-icon:after {
-            transform: rotate(-45deg);
-        }
+		    position: absolute;
+		    top: 20px;
+		    right: 20px;
+		    width: 40px;
+		    height: 40px;
+		    background: rgba(255, 255, 255, 0.2);
+		    border-radius: 50%;
+		    display: flex;
+		    justify-content: center;
+		    align-items: center;
+		    cursor: pointer;
+		    transition: all 0.3s ease;
+		    z-index: 1001;
+		    padding: 0;
+            border: none;
+		}
+		
+		.close-button:hover {
+		    background: rgba(255, 255, 255, 0.4);
+		    transform: rotate(90deg);
+		}
+		
+		.close-icon {
+		    position: relative;
+		    width: 20px;
+		    height: 20px;
+		}
+		
+		.close-icon:before, .close-icon:after {
+		    content: '';
+		    position: absolute;
+		    width: 20px;
+		    height: 2px;
+		    background-color: white;
+		    top: 50%;
+		    left: 0;
+		}
+		
+		.close-icon:before {
+		    transform: rotate(45deg);
+		}
+		
+		.close-icon:after {
+		    transform: rotate(-45deg);
+		}
+		
+		/* Limpar qualquer conteúdo anterior nos pseudo-elementos */
+		.close-icon:before, .close-icon:after {
+		    content: '';
+		    position: absolute;
+		    width: 20px;
+		    height: 2px;
+		    background-color: white;
+		    top: 9px; /* Posição fixa para centralizar */
+		    left: 0;
+		}
+		
+		.close-icon:before {
+		    transform: rotate(45deg);
+		}
+		
+		.close-icon:after {
+		    transform: rotate(-45deg);
+		}
         
         /* Loading Indicator */
         #loading {
@@ -420,9 +445,9 @@
     
     <!-- Menu Overlay -->
     <div id="menu-overlay">
-        <div class="close-button">
+        <button class="close-button">
             <div class="close-icon"></div>
-        </div>
+        </button>
         <div id="menu-items">
             <h2 class="menu-title">Lista de Lições</h2>
             <!-- Dynamic lesson buttons will be inserted here -->
