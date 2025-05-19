@@ -170,6 +170,7 @@
             justify-content: center;
             align-items: center;
             transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+            padding: 0;
         }
         
         #menu-button:hover {
@@ -192,6 +193,7 @@
             height: 3px;
             background-color: white;
             transition: all 0.3s ease;
+            left: 0;
         }
         
         .menu-icon:before {
@@ -309,6 +311,8 @@
             cursor: pointer;
             transition: all 0.3s ease;
             z-index: 1001;
+            padding: 0;
+            border: none;
         }
         
         .close-button:hover {
@@ -329,6 +333,7 @@
             height: 2px;
             background-color: white;
             top: 9px;
+            left: 0;
         }
         
         .close-icon:before {
@@ -383,9 +388,128 @@
             font-size: 20px;
             font-weight: bold;
         }
+        
+        /* Login Styles */
+        #login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 3000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #login-box {
+            background-color: #2b2e31;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        #login-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #f9fff2;
+        }
+        
+        #facebook-login-button {
+            background-color: #4267B2;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            transition: background-color 0.3s;
+        }
+        
+        #facebook-login-button:hover {
+            background-color: #365899;
+        }
+        
+        #facebook-icon {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        /* User Info Styles */
+        #user-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            background-color: rgba(43, 46, 49, 0.8);
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        #user-profile-pic {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        #user-name {
+            color: #f9fff2;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        #logout-button {
+            background: none;
+            border: none;
+            color: #f9fff2;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: underline;
+            padding: 0;
+            box-shadow: none;
+        }
+        
+        #logout-button:hover {
+            color: #ff6666;
+            transform: none;
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
+    <!-- Login Container -->
+    <div id="login-container">
+        <div id="login-box">
+            <h2 id="login-title">Bem-vindo ao Listening Pro</h2>
+            <p style="color: #f9fff2; margin-bottom: 20px;">Faça login para salvar seu progresso</p>
+            <button id="facebook-login-button">
+                <span id="facebook-icon">f</span>
+                Continuar com Facebook
+            </button>
+        </div>
+    </div>
+    
+    <!-- User Info Container (escondido inicialmente) -->
+    <div id="user-info" style="display: none;">
+        <img id="user-profile-pic" src="" alt="Foto de perfil">
+        <span id="user-name"></span>
+        <button id="logout-button">Sair</button>
+    </div>
+    
     <div id="current-lesson">Selecione uma lição no menu</div>
     
     <div id="video-container">
@@ -420,9 +544,9 @@
     
     <!-- Menu Overlay -->
     <div id="menu-overlay">
-        <div class="close-button">
+        <button class="close-button">
             <div class="close-icon"></div>
-        </div>
+        </button>
         <div id="menu-items">
             <h2 class="menu-title">Lista de Lições</h2>
             <!-- Dynamic lesson buttons will be inserted here -->
@@ -434,6 +558,33 @@
         <div class="spinner"></div>
     </div>
     
+    <!-- Facebook SDK -->
+    <script>
+        // Inicialização do Facebook SDK
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId      : 'SEU_APP_ID_AQUI', // Substitua pelo seu App ID do Facebook
+                cookie     : true,
+                xfbml      : true,
+                version    : 'v18.0' // Use a versão mais recente
+            });
+            
+            // Verificar status de login ao carregar a página
+            FB.getLoginStatus(function(response) {
+                handleFacebookLoginResponse(response);
+            });
+        };
+
+        // Carregando o SDK do Facebook assincronamente
+        (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    </script>
+    
     <script>
         // Lições disponíveis (nome do arquivo SRT e URL do vídeo)
         const lessons = [
@@ -443,14 +594,14 @@
                 videoUrl: "https://files.catbox.moe/noor8m.mp4"
             },
             { 
-                name: "Adele - Hello",
-                srtFile: "Adele - Hello.srt",
-                videoUrl: "https://files.catbox.moe/qnxodn.mp4" 
+                name: "Melanie Martinez - The Contortionist",
+                srtFile: "Melanie Martinez - The Contortionist.srt",
+                videoUrl: "https://files.catbox.moe/vxoldg.mp4" 
             },
             { 
-                name: "Eminem - Lose Yourself",
-                srtFile: "Eminem - Lose Yourself.srt",
-                videoUrl: "https://files.catbox.moe/xg7qbr.mp4" 
+                name: "New West - Those Eyes",
+                srtFile: "New West - Those Eyes.srt",
+                videoUrl: "https://files.catbox.moe/k7xhth.mp4" 
             }
             // Adicione mais lições conforme necessário
         ];
@@ -470,6 +621,58 @@
         let fraseAcertada = false;
         let audioPlaying = false;
         let currentLessonName = "";
+        
+        // Variáveis para autenticação e dados do usuário
+        let currentUser = null;
+        let userProgressData = {};
+        
+        // Função para lidar com o botão de login do Facebook
+        document.getElementById('facebook-login-button').addEventListener('click', function() {
+            FB.login(function(response) {
+                handleFacebookLoginResponse(response);
+            }, {scope: 'public_profile,email'});
+        });
+        
+        // Função para lidar com o botão de logout
+        document.getElementById('logout-button').addEventListener('click', function() {
+            FB.logout(function(response) {
+                currentUser = null;
+                document.getElementById('login-container').style.display = 'flex';
+                document.getElementById('user-info').style.display = 'none';
+                saveAllUserProgress(); // Salvar progresso antes de deslogar
+            });
+        });
+        
+        // Função para processar a resposta do login do Facebook
+        function handleFacebookLoginResponse(response) {
+            if (response.status === 'connected') {
+                // O usuário está logado no Facebook e autorizou seu aplicativo
+                FB.api('/me', {fields: 'name,email,picture'}, function(response) {
+                    currentUser = {
+                        id: response.id,
+                        name: response.name,
+                        email: response.email,
+                        picture: response.picture.data.url
+                    };
+                    
+                    // Atualizar a interface para mostrar info do usuário
+                    document.getElementById('user-profile-pic').src = currentUser.picture;
+                    document.getElementById('user-name').textContent = currentUser.name;
+                    document.getElementById('user-info').style.display = 'flex';
+                    document.getElementById('login-container').style.display = 'none';
+                    
+                    // Carregar os dados de progresso do usuário
+                    loadUserProgress();
+                    
+                    // Inicializar a aplicação após login
+                    initAppAfterLogin();
+                });
+            } else {
+                // O usuário não está logado ou não autorizou o aplicativo
+                document.getElementById('login-container').style.display = 'flex';
+                document.getElementById('user-info').style.display = 'none';
+            }
+        }
         
         // Função para gerar o URL do CDN do jsDelivr para os arquivos SRT
         function getSrtCdnUrl(filename) {
@@ -541,10 +744,41 @@
             
             // Carregar o arquivo SRT
             const srtUrl = getSrtCdnUrl(lesson.srtFile);
-            loadSrtFromUrl(srtUrl);
+            loadSrtFromUrl(srtUrl).then(success => {
+                if (success) {
+                    // Verificar se há progresso salvo para esta lição para o usuário atual
+                    if (currentUser && userProgressData[currentLessonName]) {
+                        const savedProgress = userProgressData[currentLessonName];
+                        
+                        if (savedProgress.fraseIndex < frases.length) {
+                            const retomar = confirm(`Você tem um progresso salvo nesta lição. Deseja continuar de onde parou? (Frase ${savedProgress.fraseIndex + 1})`);
+                            
+                            if (retomar) {
+                                indiceFrase = savedProgress.fraseIndex;
+                                acertos = savedProgress.acertos || 0;
+                                fraseAtual = frases[indiceFrase];
+                                palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+                                palavrasClicadas = [];
+                                fraseAcertada = false;
+                                progresso = indiceFrase;
+                                
+                                criarPalavras();
+                                atualizarFrase();
+                                atualizarProgresso();
+                                atualizarPlacar();
+                            }
+                        }
+                    }
+                }
+            });
             
             // Fechar o menu
             toggleMenu();
+            
+            // Salvar esta lição como a última acessada para o usuário atual
+            if (currentUser) {
+                saveUserPreference('lastLessonIndex', lessonIndex);
+            }
         }
         
         // Função para mostrar/esconder o indicador de carregamento
@@ -594,368 +828,347 @@
             }
         }
         
-        // Função para embaralhar palavras
-        function embaralharPalavras(frase) {
-            if (!frase) return [];
-            let palavras = frase.split(' ');
-            for (let i = palavras.length - 1; i > 0; i--) {
-                let j = Math.floor(Math.random() * (i + 1));
-                let temp = palavras[i];
-                palavras[i] = palavras[j];
-                palavras[j] = temp;
-            }
-            return palavras;
-        }
-        
-        // Função para criar elementos de palavras
-        function criarPalavras() {
-            let palavrasDiv = document.getElementById('palavras');
-            palavrasDiv.innerHTML = '';
-            palavraElementos = {};
-            
-            if (!palavrasEmbaralhadas || palavrasEmbaralhadas.length === 0) return;
-            
-            palavrasEmbaralhadas.forEach(palavra => {
-                let palavraDiv = document.createElement('div');
-                palavraDiv.classList.add('palavra');
-                palavraDiv.innerText = palavra;
-                palavraDiv.onclick = () => clicarPalavra(palavra, palavraDiv);
-                palavraElementos[palavra] = palavraDiv;
-                palavrasDiv.appendChild(palavraDiv);
-            });
-        }
-        
-        // Função para lidar com o clique em uma palavra
-        function clicarPalavra(palavra, elemento) {
-            if (!fraseAtual) return;
-            
-            // Pausar qualquer áudio em reprodução antes de tocar o novo
-            pausarAudios();
-            
-            // Reproduzir a palavra
-            const utterance = new SpeechSynthesisUtterance(palavra);
-            utterance.lang = detectarIdioma(fraseAtual.texto);
-            
-            // Configurar flag para controlar áudio
-            audioPlaying = true;
-            utterance.onend = function() {
-                audioPlaying = false;
-            };
-            
-            speechSynthesis.speak(utterance);
-            
-            if (elemento.classList.contains('acertada')) {
-                return; // Palavra já foi usada
-            }
-            
-            let fraseSplit = fraseAtual.texto.split(' ');
-            if (palavrasClicadas.length < fraseSplit.length && fraseSplit[palavrasClicadas.length] === palavra) {
-                palavrasClicadas.push(palavra);
-                elemento.classList.add('acertada');
-                atualizarFrase();
-                verificarFrase();
-            } else {
-                // Adicionamos a classe errada e removemos após 500ms
-                elemento.classList.add('errada');
-                setTimeout(() => {
-                    elemento.classList.remove('errada');
-                }, 500);
-            }
-        }
-        
-        // Função para pausar todos os áudios
-        function pausarAudios() {
-            // Pausar o sintetizador de voz
-            if (speechSynthesis.speaking) {
-                speechSynthesis.cancel();
-                audioPlaying = false;
-            }
-            
-            // Pausar o vídeo se estiver tocando
-            if (playerReady && !videoElement.paused) {
-                videoElement.pause();
-            }
-        }
-        
-        // Função para detectar o idioma com base no texto
-        function detectarIdioma(texto) {
-            if (!texto) return 'en-US';
-            
-            // Esta é uma detecção simples
-            if (texto.includes('Aku') || texto.includes('kamu')) {
-                return 'id-ID'; // Indonésio
-            } else if (texto.includes('Scheiße')) {
-                return 'de-DE'; // Alemão
-            }
-            return 'en-US'; // Por padrão, usamos inglês
-        }
-        
-        // Função para atualizar a frase exibida
-        function atualizarFrase() {
-            let fraseDiv = document.getElementById('frase');
-            fraseDiv.innerHTML = '';
-            
-            // Adicionar as palavras já clicadas com espaço entre elas
-            palavrasClicadas.forEach((palavra, index) => {
-                const span = document.createElement('span');
-                span.textContent = palavra;
-                span.classList.add('palavra-na-frase'); // Adiciona classe para estilização
-                fraseDiv.appendChild(span);
-            });
-        }
-        
-        // Função para verificar se a frase está completa
-        function verificarFrase() {
-            if (!fraseAtual) return;
-            
-            if (palavrasClicadas.join(' ') === fraseAtual.texto) {
-                document.getElementById('avancar').style.display = 'inline-block';
-                if (playerReady && !videoElement.paused) {
-                    videoElement.pause();
-                }
-                progresso++;
-                fraseAcertada = true;
-                acertos++;
-                atualizarPlacar();
-                atualizarProgresso();
-            }
-        }
-        
-        // Função para ler a frase atual usando o sintetizador de voz
-        function lerFraseAtual() {
-            if (!fraseAtual) return;
-            
-            // Pausar qualquer áudio em reprodução
-            pausarAudios();
-            
-            const utterance = new SpeechSynthesisUtterance(fraseAtual.texto);
-            utterance.lang = detectarIdioma(fraseAtual.texto);
-            
-            // Configurar flag para controlar áudio
-            audioPlaying = true;
-            utterance.onend = function() {
-                audioPlaying = false;
-            };
-            
-            speechSynthesis.speak(utterance);
-        }
-        
-        // Função para atualizar o progresso
-        function atualizarProgresso() {
-            document.getElementById('progresso').innerText = `Progresso: ${progresso} de ${frases.length}`;
-        }
-        
-        // Função para atualizar o placar
-        function atualizarPlacar() {
-            document.getElementById('placar').innerText = `Acertos: ${acertos}`;
-        }
-        
-        // Função para reproduzir o trecho do vídeo atual
-        function reproduzirTrechoAtual() {
-            if (!fraseAtual) return;
-            
-            // Verificar se o sintetizador de voz está tocando
-            if (audioPlaying) {
-                pausarAudios();
-            }
-            
-            if (playerReady) {
-                videoElement.currentTime = fraseAtual.tempoInicio;
-                videoElement.play();
-                iniciarMonitorTempo();
-            }
-        }
-        
-        // Função para alternar a exibição do menu
-        function toggleMenu() {
-            const menuButton = document.getElementById('menu-button');
-            const menuOverlay = document.getElementById('menu-overlay');
-            
-            menuButton.classList.toggle('active');
-            menuOverlay.classList.toggle('active');
-        }
-        
-        // Inicializar botões de menu
-        function initializeMenuButtons() {
-            const menuItemsContainer = document.getElementById('menu-items');
-            menuItemsContainer.innerHTML = '<h2 class="menu-title">Lista de Lições</h2>';
-            
-            lessons.forEach((lesson, index) => {
-                const button = document.createElement('button');
-                button.textContent = lesson.name;
-                button.classList.add('lesson-button');
-                button.onclick = () => loadLesson(index);
-                menuItemsContainer.appendChild(button);
-            });
-        }
-        
-        // Adicionar event listeners
-        document.getElementById('avancar').onclick = function() {
-            indiceFrase++;
-            if (indiceFrase >= frases.length) {
-                alert("Parabéns! Você completou todas as frases!");
-                indiceFrase = 0;
-                acertos = 0;
-                progresso = 0;
-                atualizarPlacar();
-                atualizarProgresso();
-            }
-            fraseAtual = frases[indiceFrase];
-            palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
-            palavrasClicadas = [];
-            fraseAcertada = false;
-            criarPalavras();
-            atualizarFrase();
-            document.getElementById('avancar').style.display = 'none';
-            reproduzirTrechoAtual();
-        };
-        
-        document.getElementById('desistir').onclick = function() {
-            if (!fraseAtual) return;
-            
-            palavrasClicadas = fraseAtual.texto.split(' ');
-            atualizarFrase();
-            
-            Object.keys(palavraElementos).forEach(palavra => {
-                if (fraseAtual.texto.split(' ').includes(palavra)) {
-                    palavraElementos[palavra].classList.add('acertada');
-                }
-            });
-            
-            if (!fraseAcertada) {
-                progresso++;
-                atualizarProgresso();
-            }
-            
-            document.getElementById('avancar').style.display = 'inline-block';
-        };
-        
-        document.getElementById('repetir').onclick = function() {
-            reproduzirTrechoAtual();
-        };
-        
-        document.getElementById('lerFrase').onclick = function() {
-            lerFraseAtual();
-        };
-        
-        document.getElementById('menu-button').onclick = toggleMenu;
-        document.querySelector('.close-button').onclick = toggleMenu;
-        
-        
-        // *************** Inicializar a aplicação
-function init() {
-    initializeMenuButtons();
+function embaralharPalavras(frase) {
+    if (!frase) return [];
+    let palavras = frase.replace(/[.,!?;:""]/g, '').split(' ').filter(p => p !== '');
     
-    // Mostrar inicialmente a mensagem para selecionar uma lição
-    document.getElementById('current-lesson').textContent = "Selecione uma lição no menu";
-    
-    // Verificar se há algum parâmetro na URL para carregar uma lição específica
-    const urlParams = new URLSearchParams(window.location.search);
-    const lessonParam = urlParams.get('lesson');
-    
-    if (lessonParam !== null && !isNaN(lessonParam) && lessons[parseInt(lessonParam)]) {
-        // Carregar a lição especificada pelo parâmetro da URL
-        loadLesson(parseInt(lessonParam));
-    } else {
-        // Se não houver parâmetro, abrir o menu automaticamente
-        setTimeout(() => {
-            toggleMenu();
-        }, 500);
+    // Algoritmo de Fisher-Yates para embaralhar
+    for (let i = palavras.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [palavras[i], palavras[j]] = [palavras[j], palavras[i]];
     }
     
-    // Adicionar listener para teclas de atalho
-    document.addEventListener('keydown', function(event) {
-        // Tecla ESC para fechar ou abrir o menu
-        if (event.key === 'Escape') {
-            const menuOverlay = document.getElementById('menu-overlay');
-            if (menuOverlay.classList.contains('active')) {
-                toggleMenu();
-            }
-        }
-        
-        // Tecla ESPAÇO para reproduzir/pausar o trecho atual
-        if (event.code === 'Space' && !event.target.matches('input, textarea')) {
-            event.preventDefault();
-            if (playerReady && videoElement.paused) {
-                reproduzirTrechoAtual();
-            } else {
-                videoElement.pause();
-                pararMonitorTempo();
-            }
-        }
-        
-        // Tecla ENTER para avançar quando disponível
-        if (event.key === 'Enter') {
-            const avancarBtn = document.getElementById('avancar');
-            if (avancarBtn.style.display !== 'none') {
-                avancarBtn.click();
-            }
-        }
-    });
+    return palavras;
+}
+
+// Função para criar as palavras embaralhadas na interface
+function criarPalavras() {
+    const containerPalavras = document.getElementById('palavras');
+    containerPalavras.innerHTML = '';
+    palavraElementos = {};
     
-    // Adicionar evento para restaurar a interface quando o vídeo terminar
-    videoElement.addEventListener('ended', function() {
-        pararMonitorTempo();
-    });
-    
-    // Verificar se há uma última lição acessada
-    const lastLessonIndex = localStorage.getItem('lastLessonIndex');
-    if (lastLessonIndex !== null && !isNaN(lastLessonIndex) && lessons[parseInt(lastLessonIndex)]) {
-        // Perguntar ao usuário se deseja carregar a última lição
-        setTimeout(() => {
-            const carregarUltimaLicao = confirm(`Deseja carregar a última lição acessada? (${lessons[parseInt(lastLessonIndex)].name})`);
-            if (carregarUltimaLicao) {
-                loadLesson(parseInt(lastLessonIndex));
-            }
-        }, 1000);
+    for (let palavra of palavrasEmbaralhadas) {
+        const elementoPalavra = document.createElement('div');
+        elementoPalavra.className = 'palavra';
+        elementoPalavra.textContent = palavra;
+        elementoPalavra.addEventListener('click', () => clicarPalavra(palavra, elementoPalavra));
+        containerPalavras.appendChild(elementoPalavra);
+        palavraElementos[palavra] = elementoPalavra;
     }
 }
 
-// Função para salvar o progresso do usuário no localStorage
-function salvarProgresso() {
-    if (!currentLessonName) return;
+// Função para atualizar a frase na interface
+function atualizarFrase() {
+    const containerFrase = document.getElementById('frase');
+    containerFrase.innerHTML = '';
     
-    const progressoData = {
-        lessonName: currentLessonName,
+    for (let palavra of palavrasClicadas) {
+        const elementoPalavra = document.createElement('span');
+        elementoPalavra.className = 'palavra-na-frase';
+        elementoPalavra.textContent = palavra;
+        containerFrase.appendChild(elementoPalavra);
+    }
+}
+
+// Função para atualizar o progresso exibido
+function atualizarProgresso() {
+    document.getElementById('progresso').textContent = `Progresso: ${indiceFrase + 1} de ${frases.length}`;
+}
+
+// Função para atualizar o placar de acertos
+function atualizarPlacar() {
+    document.getElementById('placar').textContent = `Acertos: ${acertos}`;
+}
+
+// Função para reproduzir o trecho atual do vídeo
+function reproduzirTrechoAtual() {
+    if (!playerReady || !fraseAtual) return;
+    
+    videoElement.currentTime = fraseAtual.tempoInicio;
+    videoElement.play();
+    iniciarMonitorTempo();
+}
+
+// Função para ler a frase utilizando síntese de voz
+function lerFrase() {
+    if (!fraseAtual) return;
+    
+    // Verificar se a API de síntese de voz está disponível
+    if ('speechSynthesis' in window) {
+        if (audioPlaying) {
+            window.speechSynthesis.cancel();
+            audioPlaying = false;
+            return;
+        }
+        
+        const utterance = new SpeechSynthesisUtterance(fraseAtual.texto);
+        utterance.lang = 'en-US';
+        
+        utterance.onend = function() {
+            audioPlaying = false;
+        };
+        
+        audioPlaying = true;
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert('Seu navegador não suporta síntese de voz.');
+    }
+}
+
+// Função para clicar em uma palavra
+function clicarPalavra(palavra, elemento) {
+    // Se a frase já foi acertada, não faz nada
+    if (fraseAcertada) return;
+    
+    // Adicionar a palavra clicada na lista
+    palavrasClicadas.push(palavra);
+    
+    // Esconder a palavra clicada
+    elemento.style.display = 'none';
+    
+    // Atualizar a frase com as palavras clicadas
+    atualizarFrase();
+    
+    // Verificar se a frase está completa
+    verificarFrase();
+}
+
+// Função para verificar se a frase está correta
+function verificarFrase() {
+    if (!fraseAtual) return;
+    
+    // Obter a frase correta sem pontuação
+    const fraseCorreta = fraseAtual.texto.replace(/[.,!?;:""]/g, '').split(' ').filter(p => p !== '');
+    
+    // Verificar se o número de palavras é o mesmo
+    if (palavrasClicadas.length === fraseCorreta.length) {
+        // Verificar se a ordem está correta
+        let correto = true;
+        for (let i = 0; i < fraseCorreta.length; i++) {
+            if (palavrasClicadas[i] !== fraseCorreta[i]) {
+                correto = false;
+                break;
+            }
+        }
+        
+        if (correto) {
+            // Frase está correta
+            acertos++;
+            fraseAcertada = true;
+            document.getElementById('avancar').style.display = 'block';
+            atualizarPlacar();
+            
+            // Salvar progresso se o usuário estiver logado
+            if (currentUser) {
+                saveUserProgress();
+            }
+        } else {
+            // Frase está incorreta, marcar as palavras erradas
+            marcarPalavrasErradas(fraseCorreta);
+        }
+    }
+}
+
+// Função para marcar palavras erradas
+function marcarPalavrasErradas(fraseCorreta) {
+    const containerFrase = document.getElementById('frase');
+    const palavrasNaFrase = containerFrase.querySelectorAll('.palavra-na-frase');
+    
+    for (let i = 0; i < palavrasNaFrase.length; i++) {
+        if (i >= fraseCorreta.length || palavrasClicadas[i] !== fraseCorreta[i]) {
+            palavrasNaFrase[i].classList.add('errada');
+        } else {
+            palavrasNaFrase[i].classList.add('acertada');
+        }
+    }
+    
+    // Reiniciar após um curto período
+    setTimeout(() => {
+        palavrasClicadas = [];
+        atualizarFrase();
+        
+        // Mostrar novamente todas as palavras
+        for (let palavra in palavraElementos) {
+            palavraElementos[palavra].style.display = 'inline-block';
+        }
+    }, 2000);
+}
+
+// Função para avançar para a próxima frase
+function avancarFrase() {
+    indiceFrase++;
+    progresso++;
+    
+    if (indiceFrase < frases.length) {
+        fraseAtual = frases[indiceFrase];
+        palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+        palavrasClicadas = [];
+        fraseAcertada = false;
+        
+        criarPalavras();
+        atualizarFrase();
+        atualizarProgresso();
+        document.getElementById('avancar').style.display = 'none';
+        
+        // Reproduzir o próximo trecho
+        reproduzirTrechoAtual();
+    } else {
+        // Finalizar a lição
+        alert(`Parabéns! Você completou esta lição com ${acertos} acertos.`);
+        // Resetar para a primeira frase
+        indiceFrase = 0;
+        fraseAtual = frases[indiceFrase];
+        palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+        palavrasClicadas = [];
+        fraseAcertada = false;
+        progresso = 0;
+        
+        criarPalavras();
+        atualizarFrase();
+        atualizarProgresso();
+        document.getElementById('avancar').style.display = 'none';
+    }
+}
+
+// Função para desistir da frase atual
+function desistir() {
+    if (fraseAcertada) return;
+    
+    // Mostrar a frase correta
+    const fraseCorreta = fraseAtual.texto.replace(/[.,!?;:""]/g, '').split(' ').filter(p => p !== '');
+    palavrasClicadas = [...fraseCorreta];
+    atualizarFrase();
+    
+    // Desabilitar palavras
+    for (let palavra in palavraElementos) {
+        palavraElementos[palavra].style.display = 'none';
+    }
+    
+    fraseAcertada = true;
+    document.getElementById('avancar').style.display = 'block';
+}
+
+// Função para salvar o progresso do usuário atual na lição atual
+function saveUserProgress() {
+    if (!currentUser || !currentLessonName) return;
+    
+    if (!userProgressData[currentLessonName]) {
+        userProgressData[currentLessonName] = {};
+    }
+    
+    userProgressData[currentLessonName] = {
         fraseIndex: indiceFrase,
         acertos: acertos,
-        timestamp: new Date().getTime()
+        ultimoAcesso: new Date().toISOString()
     };
     
-    localStorage.setItem('listeningProProgresso', JSON.stringify(progressoData));
+    // Salvar no localStorage
+    localStorage.setItem(`listenPro_${currentUser.id}_progress`, JSON.stringify(userProgressData));
 }
 
-// Função para carregar o progresso salvo
-function carregarProgresso() {
-    const progressoSalvo = localStorage.getItem('listeningProProgresso');
-    if (!progressoSalvo) return null;
+// Função para salvar todo o progresso do usuário
+function saveAllUserProgress() {
+    if (!currentUser) return;
+    localStorage.setItem(`listenPro_${currentUser.id}_progress`, JSON.stringify(userProgressData));
+}
+
+// Função para carregar o progresso do usuário
+function loadUserProgress() {
+    if (!currentUser) return;
     
-    try {
-        return JSON.parse(progressoSalvo);
-    } catch (e) {
-        console.error("Erro ao carregar progresso:", e);
-        return null;
+    const savedProgress = localStorage.getItem(`listenPro_${currentUser.id}_progress`);
+    if (savedProgress) {
+        userProgressData = JSON.parse(savedProgress);
+    } else {
+        userProgressData = {};
+    }
+    
+    // Carregar última lição acessada
+    const lastLessonIndex = loadUserPreference('lastLessonIndex', 0);
+    if (lastLessonIndex < lessons.length) {
+        setTimeout(() => loadLesson(lastLessonIndex), 500);
     }
 }
 
-// Função para verificar se há progresso salvo para a lição atual
-function verificarProgressoLicao(lessonName) {
-    const progresso = carregarProgresso();
-    if (!progresso || progresso.lessonName !== lessonName) return false;
+// Função para salvar preferências do usuário
+function saveUserPreference(key, value) {
+    if (!currentUser) return;
     
-    // Verificar se o progresso é recente (menos de 7 dias)
-    const agora = new Date().getTime();
-    const diferenca = agora - progresso.timestamp;
-    const diasDiferenca = diferenca / (1000 * 60 * 60 * 24);
-    
-    return diasDiferenca < 7;
+    const prefKey = `listenPro_${currentUser.id}_pref_${key}`;
+    localStorage.setItem(prefKey, JSON.stringify(value));
 }
 
-// Inicializar a aplicação quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', init);
+// Função para carregar preferências do usuário
+function loadUserPreference(key, defaultValue) {
+    if (!currentUser) return defaultValue;
     
-    </script>          
-            
+    const prefKey = `listenPro_${currentUser.id}_pref_${key}`;
+    const savedValue = localStorage.getItem(prefKey);
+    return savedValue ? JSON.parse(savedValue) : defaultValue;
+}
 
-</body>
+// Inicializar evento para abrir/fechar menu
+function initMenuEvents() {
+    const menuButton = document.getElementById('menu-button');
+    const closeButton = document.querySelector('.close-button');
+    const menuOverlay = document.getElementById('menu-overlay');
+    
+    menuButton.addEventListener('click', toggleMenu);
+    closeButton.addEventListener('click', toggleMenu);
+}
+
+// Função para alternar a visibilidade do menu
+function toggleMenu() {
+    const menuButton = document.getElementById('menu-button');
+    const menuOverlay = document.getElementById('menu-overlay');
+    
+    menuButton.classList.toggle('active');
+    menuOverlay.classList.toggle('active');
+}
+
+// Inicializar o menu de lições
+function initLessonsMenu() {
+    const menuItems = document.getElementById('menu-items');
+    
+    // Limpar menu existente
+    while (menuItems.firstChild) {
+        if (!menuItems.firstChild.classList || !menuItems.firstChild.classList.contains('menu-title')) {
+            menuItems.removeChild(menuItems.firstChild);
+        } else {
+            break;
+        }
+    }
+    
+    // Adicionar lições ao menu
+    lessons.forEach((lesson, index) => {
+        const button = document.createElement('button');
+        button.className = 'lesson-button';
+        button.textContent = lesson.name;
+        button.addEventListener('click', () => loadLesson(index));
+        menuItems.appendChild(button);
+    });
+}
+
+// Função para inicializar a aplicação após o login
+function initAppAfterLogin() {
+    // Inicializar eventos do menu
+    initMenuEvents();
+    
+    // Inicializar botões de controle
+    document.getElementById('repetir').addEventListener('click', reproduzirTrechoAtual);
+    document.getElementById('lerFrase').addEventListener('click', lerFrase);
+    document.getElementById('desistir').addEventListener('click', desistir);
+    document.getElementById('avancar').addEventListener('click', avancarFrase);
+    
+    // Inicializar menu de lições
+    initLessonsMenu();
+}
+
+// Inicializar eventos da aplicação
+window.addEventListener('DOMContentLoaded', function() {
+    // Se o usuário já estiver logado, os eventos serão inicializados em handleFacebookLoginResponse
+    // Caso contrário, o FB.getLoginStatus já será chamado quando o SDK do Facebook estiver carregado
+});
+        </script>
+    </body>
 </html>
