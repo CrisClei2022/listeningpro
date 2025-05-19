@@ -560,274 +560,177 @@
     
     <!-- Facebook SDK -->
     <script>
-        // Inicialização do Facebook SDK
-        window.fbAsyncInit = function() {
-            FB.init({
-                appId      : 'SEU_APP_ID_AQUI', // Substitua pelo seu App ID do Facebook
-                cookie     : true,
-                xfbml      : true,
-                version    : 'v18.0' // Use a versão mais recente
-            });
-            
-            // Verificar status de login ao carregar a página
-            FB.getLoginStatus(function(response) {
-                handleFacebookLoginResponse(response);
-            });
-        };
-
-        // Carregando o SDK do Facebook assincronamente
-        (function(d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) return;
-            js = d.createElement(s); js.id = id;
-            js.src = "https://connect.facebook.net/en_US/sdk.js";
-            fjs.parentNode.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));
-    </script>
-    
-    <script>
         // Lições disponíveis (nome do arquivo SRT e URL do vídeo)
-        const lessons = [
-            { 
-                name: "Lady Gaga - Scheiße",
-                srtFile: "Lady Gaga - Scheiße.srt",
-                videoUrl: "https://files.catbox.moe/noor8m.mp4"
-            },
-            { 
-                name: "Melanie Martinez - The Contortionist",
-                srtFile: "Melanie Martinez - The Contortionist.srt",
-                videoUrl: "https://files.catbox.moe/vxoldg.mp4" 
-            },
-            { 
-                name: "New West - Those Eyes",
-                srtFile: "New West - Those Eyes.srt",
-                videoUrl: "https://files.catbox.moe/k7xhth.mp4" 
-            }
-            // Adicione mais lições conforme necessário
-        ];
-        
-        // Variáveis globais
-        let videoElement = document.getElementById('custom-video');
-        let frases = [];
-        let indiceFrase = 0;
-        let fraseAtual = null;
-        let palavrasEmbaralhadas = [];
-        let palavrasClicadas = [];
-        let palavraElementos = {};
-        let progresso = 0;
-        let acertos = 0;
-        let playerReady = false;
-        let monitorTempoId;
-        let fraseAcertada = false;
-        let audioPlaying = false;
-        let currentLessonName = "";
-        
-        // Variáveis para autenticação e dados do usuário
-        let currentUser = null;
-        let userProgressData = {};
-        
-        // Função para lidar com o botão de login do Facebook
-        document.getElementById('facebook-login-button').addEventListener('click', function() {
-            FB.login(function(response) {
-                handleFacebookLoginResponse(response);
-            }, {scope: 'public_profile,email'});
-        });
-        
-        // Função para lidar com o botão de logout
-        document.getElementById('logout-button').addEventListener('click', function() {
-            FB.logout(function(response) {
-                currentUser = null;
-                document.getElementById('login-container').style.display = 'flex';
-                document.getElementById('user-info').style.display = 'none';
-                saveAllUserProgress(); // Salvar progresso antes de deslogar
-            });
-        });
-        
-        // Função para processar a resposta do login do Facebook
-        function handleFacebookLoginResponse(response) {
-            if (response.status === 'connected') {
-                // O usuário está logado no Facebook e autorizou seu aplicativo
-                FB.api('/me', {fields: 'name,email,picture'}, function(response) {
-                    currentUser = {
-                        id: response.id,
-                        name: response.name,
-                        email: response.email,
-                        picture: response.picture.data.url
-                    };
-                    
-                    // Atualizar a interface para mostrar info do usuário
-                    document.getElementById('user-profile-pic').src = currentUser.picture;
-                    document.getElementById('user-name').textContent = currentUser.name;
-                    document.getElementById('user-info').style.display = 'flex';
-                    document.getElementById('login-container').style.display = 'none';
-                    
-                    // Carregar os dados de progresso do usuário
-                    loadUserProgress();
-                    
-                    // Inicializar a aplicação após login
-                    initAppAfterLogin();
-                });
-            } else {
-                // O usuário não está logado ou não autorizou o aplicativo
-                document.getElementById('login-container').style.display = 'flex';
-                document.getElementById('user-info').style.display = 'none';
-            }
+const lessons = [
+    { 
+        name: "Lady Gaga - Scheiße",
+        srtFile: "Lady Gaga - Scheiße.srt",
+        videoUrl: "https://files.catbox.moe/noor8m.mp4"
+    },
+    { 
+        name: "Melanie Martinez - The Contortionist",
+        srtFile: "Melanie Martinez - The Contortionist.srt",
+        videoUrl: "https://files.catbox.moe/vxoldg.mp4" 
+    },
+    { 
+        name: "New West - Those Eyes",
+        srtFile: "New West - Those Eyes.srt",
+        videoUrl: "https://files.catbox.moe/k7xhth.mp4" 
+    }
+    // Adicione mais lições conforme necessário
+];
+
+// Variáveis globais
+let videoElement = document.getElementById('custom-video');
+let frases = [];
+let indiceFrase = 0;
+let fraseAtual = null;
+let palavrasEmbaralhadas = [];
+let palavrasClicadas = [];
+let palavraElementos = {};
+let progresso = 0;
+let acertos = 0;
+let playerReady = false;
+let monitorTempoId;
+let fraseAcertada = false;
+let audioPlaying = false;
+let currentLessonName = "";
+
+// Variáveis para autenticação e dados do usuário
+let currentUser = null;
+let userProgressData = {};
+
+// Inicialização do Facebook SDK
+window.fbAsyncInit = function() {
+    FB.init({
+        appId      : '1211147243746599', // Seu App ID do Facebook
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v18.0' // Use a versão mais recente
+    });
+    
+    // Verificar status de login ao carregar a página
+    FB.getLoginStatus(function(response) {
+        handleFacebookLoginResponse(response);
+    });
+    
+    // Configuração de permissões adicionais para o Open Graph
+    FB.AppEvents.logPageView();
+};
+
+// Carregando o SDK do Facebook assincronamente
+(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "https://connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+
+// Função para gerar o URL do CDN do jsDelivr para os arquivos SRT
+function getSrtCdnUrl(filename) {
+    // URL base do jsDelivr para o seu repositório
+    const baseUrl = "https://cdn.jsdelivr.net/gh/CrisClei2022/listeningpro@main/";
+    // Retorna a URL completa
+    return baseUrl + encodeURIComponent(filename);
+}
+
+// Função para carregar o arquivo SRT de uma URL
+async function loadSrtFromUrl(url) {
+    try {
+        showLoading(true);
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to load SRT: ${response.status}`);
         }
+        const srtContent = await response.text();
+        processSrtContent(srtContent);
+        showLoading(false);
+        return true;
+    } catch (error) {
+        console.error("Error loading SRT:", error);
+        alert("Erro ao carregar o arquivo de legendas. Por favor, tente novamente.");
+        showLoading(false);
+        return false;
+    }
+}
+
+// Função para processar o conteúdo SRT
+function processSrtContent(srt) {
+    frases = srt.split('\n\n').map(bloco => {
+        let linhas = bloco.split('\n');
+        if (linhas.length < 3) return null;
         
-        // Função para gerar o URL do CDN do jsDelivr para os arquivos SRT
-        function getSrtCdnUrl(filename) {
-            // URL base do jsDelivr para o seu repositório
-            const baseUrl = "https://cdn.jsdelivr.net/gh/CrisClei2022/listeningpro@main/";
-            // Retorna a URL completa
-            return baseUrl + encodeURIComponent(filename);
-        }
-        
-        // Função para carregar o arquivo SRT de uma URL
-        async function loadSrtFromUrl(url) {
-            try {
-                showLoading(true);
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Failed to load SRT: ${response.status}`);
-                }
-                const srtContent = await response.text();
-                processSrtContent(srtContent);
-                showLoading(false);
-                return true;
-            } catch (error) {
-                console.error("Error loading SRT:", error);
-                alert("Erro ao carregar o arquivo de legendas. Por favor, tente novamente.");
-                showLoading(false);
-                return false;
-            }
-        }
-        
-        // Função para processar o conteúdo SRT
-        function processSrtContent(srt) {
-            frases = srt.split('\n\n').map(bloco => {
-                let linhas = bloco.split('\n');
-                if (linhas.length < 3) return null;
-                
-                return {
-                    tempoInicio: converterTempo(linhas[1].split(' --> ')[0].trim()),
-                    tempoFim: converterTempo(linhas[1].split(' --> ')[1].trim()),
-                    texto: linhas.slice(2).join(' ').trim()
-                };
-            }).filter(frase => frase !== null && frase.texto !== '' && !frase.texto.includes('www.RentAnAdviser.com'));
-            
-            indiceFrase = 0;
-            fraseAtual = frases[indiceFrase];
-            palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
-            palavrasClicadas = [];
-            progresso = 0;
-            acertos = 0;
-            fraseAcertada = false;
-            
-            criarPalavras();
-            atualizarFrase();
-            atualizarProgresso();
-            atualizarPlacar();
-            document.getElementById('avancar').style.display = 'none';
-        }
-        
-        // Função para carregar uma lição
-        function loadLesson(lessonIndex) {
-            const lesson = lessons[lessonIndex];
-            currentLessonName = lesson.name;
-            
-            // Atualizar o título da lição atual
-            document.getElementById('current-lesson').textContent = currentLessonName;
-            
-            // Configurar o vídeo
-            videoElement.src = lesson.videoUrl;
-            videoElement.load();
-            
-            // Carregar o arquivo SRT
-            const srtUrl = getSrtCdnUrl(lesson.srtFile);
-            loadSrtFromUrl(srtUrl).then(success => {
-                if (success) {
-                    // Verificar se há progresso salvo para esta lição para o usuário atual
-                    if (currentUser && userProgressData[currentLessonName]) {
-                        const savedProgress = userProgressData[currentLessonName];
-                        
-                        if (savedProgress.fraseIndex < frases.length) {
-                            const retomar = confirm(`Você tem um progresso salvo nesta lição. Deseja continuar de onde parou? (Frase ${savedProgress.fraseIndex + 1})`);
-                            
-                            if (retomar) {
-                                indiceFrase = savedProgress.fraseIndex;
-                                acertos = savedProgress.acertos || 0;
-                                fraseAtual = frases[indiceFrase];
-                                palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
-                                palavrasClicadas = [];
-                                fraseAcertada = false;
-                                progresso = indiceFrase;
-                                
-                                criarPalavras();
-                                atualizarFrase();
-                                atualizarProgresso();
-                                atualizarPlacar();
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Fechar o menu
-            toggleMenu();
-            
-            // Salvar esta lição como a última acessada para o usuário atual
-            if (currentUser) {
-                saveUserPreference('lastLessonIndex', lessonIndex);
+        return {
+            tempoInicio: converterTempo(linhas[1].split(' --> ')[0].trim()),
+            tempoFim: converterTempo(linhas[1].split(' --> ')[1].trim()),
+            texto: linhas.slice(2).join(' ').trim()
+        };
+    }).filter(frase => frase !== null && frase.texto !== '' && !frase.texto.includes('www.RentAnAdviser.com'));
+    
+    indiceFrase = 0;
+    fraseAtual = frases[indiceFrase];
+    palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+    palavrasClicadas = [];
+    progresso = 0;
+    acertos = 0;
+    fraseAcertada = false;
+    
+    criarPalavras();
+    atualizarFrase();
+    atualizarProgresso();
+    atualizarPlacar();
+    document.getElementById('avancar').style.display = 'none';
+}
+
+// Função para mostrar/esconder o indicador de carregamento
+function showLoading(show) {
+    const loadingElement = document.getElementById('loading');
+    if (show) {
+        loadingElement.classList.add('active');
+    } else {
+        loadingElement.classList.remove('active');
+    }
+}
+
+// Função para converter tempo de legenda para segundos
+function converterTempo(tempo) {
+    let partes = tempo.split(',');
+    let segundos = partes[0].split(':');
+    return parseInt(segundos[0]) * 3600 + parseInt(segundos[1]) * 60 + parseInt(segundos[2]) + parseInt(partes[1]) / 1000;
+}
+
+// Evento que ocorre quando o vídeo está pronto
+videoElement.addEventListener('loadedmetadata', function() {
+    playerReady = true;
+    // Iniciar o jogo após o vídeo estar pronto
+    if (fraseAtual) {
+        reproduzirTrechoAtual();
+    }
+});
+
+// Função para monitorar o tempo do vídeo
+function iniciarMonitorTempo() {
+    monitorTempoId = setInterval(() => {
+        if (playerReady && fraseAtual) {
+            let tempoAtual = videoElement.currentTime;
+            if (tempoAtual >= fraseAtual.tempoFim) {
+                videoElement.pause();
+                pararMonitorTempo();
             }
         }
-        
-        // Função para mostrar/esconder o indicador de carregamento
-        function showLoading(show) {
-            const loadingElement = document.getElementById('loading');
-            if (show) {
-                loadingElement.classList.add('active');
-            } else {
-                loadingElement.classList.remove('active');
-            }
-        }
-        
-        // Função para converter tempo de legenda para segundos
-        function converterTempo(tempo) {
-            let partes = tempo.split(',');
-            let segundos = partes[0].split(':');
-            return parseInt(segundos[0]) * 3600 + parseInt(segundos[1]) * 60 + parseInt(segundos[2]) + parseInt(partes[1]) / 1000;
-        }
-        
-        // Evento que ocorre quando o vídeo está pronto
-        videoElement.addEventListener('loadedmetadata', function() {
-            playerReady = true;
-            // Iniciar o jogo após o vídeo estar pronto
-            if (fraseAtual) {
-                reproduzirTrechoAtual();
-            }
-        });
-        
-        // Função para monitorar o tempo do vídeo
-        function iniciarMonitorTempo() {
-            monitorTempoId = setInterval(() => {
-                if (playerReady && fraseAtual) {
-                    let tempoAtual = videoElement.currentTime;
-                    if (tempoAtual >= fraseAtual.tempoFim) {
-                        videoElement.pause();
-                        pararMonitorTempo();
-                    }
-                }
-            }, 100);
-        }
-        
-        // Função para parar o monitor de tempo
-        function pararMonitorTempo() {
-            if (monitorTempoId) {
-                clearInterval(monitorTempoId);
-                monitorTempoId = null;
-            }
-        }
-        
+    }, 100);
+}
+
+// Função para parar o monitor de tempo
+function pararMonitorTempo() {
+    if (monitorTempoId) {
+        clearInterval(monitorTempoId);
+        monitorTempoId = null;
+    }
+}
+
+// Função para embaralhar palavras
 function embaralharPalavras(frase) {
     if (!frase) return [];
     let palavras = frase.replace(/[.,!?;:""]/g, '').split(' ').filter(p => p !== '');
@@ -996,6 +899,11 @@ function marcarPalavrasErradas(fraseCorreta) {
 
 // Função para avançar para a próxima frase
 function avancarFrase() {
+    // Salvar o progresso atual antes de avançar
+    if (currentUser) {
+        saveCurrentProgress();
+    }
+    
     indiceFrase++;
     progresso++;
     
@@ -1010,23 +918,19 @@ function avancarFrase() {
         atualizarProgresso();
         document.getElementById('avancar').style.display = 'none';
         
-        // Reproduzir o próximo trecho
-        reproduzirTrechoAtual();
+        if (playerReady) {
+            reproduzirTrechoAtual();
+        }
     } else {
-        // Finalizar a lição
-        alert(`Parabéns! Você completou esta lição com ${acertos} acertos.`);
-        // Resetar para a primeira frase
-        indiceFrase = 0;
-        fraseAtual = frases[indiceFrase];
-        palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
-        palavrasClicadas = [];
-        fraseAcertada = false;
-        progresso = 0;
-        
-        criarPalavras();
-        atualizarFrase();
-        atualizarProgresso();
+        // Fim das lições
+        document.getElementById('palavras').innerHTML = '';
+        document.getElementById('frase').innerHTML = '<span style="color: #4CAF50; font-size: 24px;">Parabéns! Você completou esta lição!</span>';
         document.getElementById('avancar').style.display = 'none';
+        
+        // Salvar progresso final
+        if (currentUser) {
+            saveCurrentProgress();
+        }
     }
 }
 
@@ -1048,63 +952,184 @@ function desistir() {
     document.getElementById('avancar').style.display = 'block';
 }
 
-// Função para salvar o progresso do usuário atual na lição atual
-function saveUserProgress() {
-    if (!currentUser || !currentLessonName) return;
+// Função para salvar o progresso do usuário no Facebook
+function saveProgressToFacebook(lessonName, fraseIndex, acertos) {
+    if (!currentUser) return;
     
-    if (!userProgressData[currentLessonName]) {
-        userProgressData[currentLessonName] = {};
-    }
+    FB.api(
+        '/me/listeningpro:complete', 
+        'post',
+        {
+            lesson: `https://listeningpro.app/lesson/${encodeURIComponent(lessonName)}`,
+            progress: fraseIndex,
+            score: acertos,
+            // O access_token está implícito no SDK já inicializado
+        },
+        function(response) {
+            if (!response || response.error) {
+                console.error('Erro ao salvar progresso no Facebook:', response ? response.error : 'Resposta nula');
+                // Fallback para armazenamento local
+                saveProgressLocally(lessonName, fraseIndex, acertos);
+            } else {
+                console.log('Progresso salvo com sucesso no Facebook:', response);
+            }
+        }
+    );
+}
+
+// Função para carregar o progresso do usuário do Facebook
+function loadProgressFromFacebook() {
+    if (!currentUser) return;
     
-    userProgressData[currentLessonName] = {
-        fraseIndex: indiceFrase,
+    showLoading(true);
+    
+    FB.api(
+        '/me/listeningpro:complete',
+        function(response) {
+            showLoading(false);
+            
+            if (!response || response.error) {
+                console.error('Erro ao carregar progresso do Facebook:', response ? response.error : 'Resposta nula');
+                // Fallback para carregar do armazenamento local
+                loadProgressLocally();
+                return;
+            }
+            
+            // Limpar dados de progresso existentes
+            userProgressData = {};
+            
+            // Processar os dados retornados
+            if (response.data && response.data.length > 0) {
+                response.data.forEach(item => {
+                    // Extrair o nome da lição da URL do objeto
+                    const lessonUrl = item.data.lesson;
+                    const lessonName = decodeURIComponent(lessonUrl.split('/').pop());
+                    
+                    // Verificar se já existe um progresso mais recente para esta lição
+                    if (!userProgressData[lessonName] || 
+                        new Date(item.publish_time) > new Date(userProgressData[lessonName].timestamp)) {
+                        userProgressData[lessonName] = {
+                            fraseIndex: parseInt(item.data.progress),
+                            acertos: parseInt(item.data.score),
+                            timestamp: item.publish_time
+                        };
+                    }
+                });
+                
+                console.log('Progresso carregado do Facebook:', userProgressData);
+            }
+            
+            // Carregar a última lição acessada (se houver)
+            loadLastAccessedLesson();
+        }
+    );
+}
+
+// Função para salvar a última lição acessada
+function saveLastAccessedLesson(lessonIndex) {
+    if (!currentUser) return;
+    
+    FB.api(
+        '/me/listeningpro:access',
+        'post',
+        {
+            lesson: `https://listeningpro.app/lesson/${encodeURIComponent(lessons[lessonIndex].name)}`,
+            // O access_token está implícito no SDK já inicializado
+        },
+        function(response) {
+            if (!response || response.error) {
+                console.error('Erro ao salvar última lição no Facebook:', response ? response.error : 'Resposta nula');
+                // Fallback para armazenamento local
+                localStorage.setItem('lastLessonIndex_' + currentUser.id, lessonIndex);
+            } else {
+                console.log('Última lição salva com sucesso no Facebook:', response);
+            }
+        }
+    );
+}
+
+// Função para carregar a última lição acessada
+function loadLastAccessedLesson() {
+    if (!currentUser) return;
+    
+    FB.api(
+        '/me/listeningpro:access',
+        {
+            limit: 1,
+            order: 'reverse_chronological'
+        },
+        function(response) {
+            if (!response || response.error) {
+                console.error('Erro ao carregar última lição do Facebook:', response ? response.error : 'Resposta nula');
+                // Fallback para armazenamento local
+                const lastLessonIndex = localStorage.getItem('lastLessonIndex_' + currentUser.id);
+                if (lastLessonIndex !== null) {
+                    loadLesson(parseInt(lastLessonIndex));
+                }
+                return;
+            }
+            
+            if (response.data && response.data.length > 0) {
+                const lessonUrl = response.data[0].data.lesson;
+                const lessonName = decodeURIComponent(lessonUrl.split('/').pop());
+                
+                // Encontrar o índice da lição pelo nome
+                const lessonIndex = lessons.findIndex(lesson => lesson.name === lessonName);
+                if (lessonIndex !== -1) {
+                    loadLesson(lessonIndex);
+                }
+            }
+        }
+    );
+}
+
+// Funções de fallback para armazenamento local
+function saveProgressLocally(lessonName, fraseIndex, acertos) {
+    if (!currentUser) return;
+    
+    // Atualizar os dados em memória
+    userProgressData[lessonName] = {
+        fraseIndex: fraseIndex,
         acertos: acertos,
-        ultimoAcesso: new Date().toISOString()
+        timestamp: new Date().toISOString()
     };
     
     // Salvar no localStorage
-    localStorage.setItem(`listenPro_${currentUser.id}_progress`, JSON.stringify(userProgressData));
+    localStorage.setItem('userProgress_' + currentUser.id, JSON.stringify(userProgressData));
 }
 
-// Função para salvar todo o progresso do usuário
+function loadProgressLocally() {
+    if (!currentUser) return;
+    
+    const savedData = localStorage.getItem('userProgress_' + currentUser.id);
+    if (savedData) {
+        userProgressData = JSON.parse(savedData);
+        console.log('Progresso carregado do armazenamento local:', userProgressData);
+    }
+}
+
+// Função para salvar o progresso atual
+function saveCurrentProgress() {
+    if (!currentUser || !currentLessonName) return;
+    
+    saveProgressToFacebook(currentLessonName, indiceFrase, acertos);
+}
+
+// Função para salvar todas as preferências do usuário
 function saveAllUserProgress() {
     if (!currentUser) return;
-    localStorage.setItem(`listenPro_${currentUser.id}_progress`, JSON.stringify(userProgressData));
-}
-
-// Função para carregar o progresso do usuário
-function loadUserProgress() {
-    if (!currentUser) return;
     
-    const savedProgress = localStorage.getItem(`listenPro_${currentUser.id}_progress`);
-    if (savedProgress) {
-        userProgressData = JSON.parse(savedProgress);
-    } else {
-        userProgressData = {};
-    }
-    
-    // Carregar última lição acessada
-    const lastLessonIndex = loadUserPreference('lastLessonIndex', 0);
-    if (lastLessonIndex < lessons.length) {
-        setTimeout(() => loadLesson(lastLessonIndex), 500);
+    // Salvar o progresso atual se houver uma lição carregada
+    if (currentLessonName) {
+        saveProgressToFacebook(currentLessonName, indiceFrase, acertos);
     }
 }
 
-// Função para salvar preferências do usuário
+// Função para salvar uma preferência específica do usuário
 function saveUserPreference(key, value) {
     if (!currentUser) return;
     
-    const prefKey = `listenPro_${currentUser.id}_pref_${key}`;
-    localStorage.setItem(prefKey, JSON.stringify(value));
-}
-
-// Função para carregar preferências do usuário
-function loadUserPreference(key, defaultValue) {
-    if (!currentUser) return defaultValue;
-    
-    const prefKey = `listenPro_${currentUser.id}_pref_${key}`;
-    const savedValue = localStorage.getItem(prefKey);
-    return savedValue ? JSON.parse(savedValue) : defaultValue;
+    localStorage.setItem(`${key}_${currentUser.id}`, JSON.stringify(value));
 }
 
 // Inicializar evento para abrir/fechar menu
@@ -1149,6 +1174,95 @@ function initLessonsMenu() {
     });
 }
 
+// Função para processar a resposta do login do Facebook
+function handleFacebookLoginResponse(response) {
+    if (response.status === 'connected') {
+        // O usuário está logado no Facebook e autorizou seu aplicativo
+        FB.api('/me', {fields: 'name,email,picture'}, function(response) {
+            currentUser = {
+                id: response.id,
+                name: response.name,
+                email: response.email,
+                picture: response.picture.data.url
+            };
+            
+            // Atualizar a interface para mostrar info do usuário
+            document.getElementById('user-profile-pic').src = currentUser.picture;
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('user-info').style.display = 'flex';
+            document.getElementById('login-container').style.display = 'none';
+            
+            // Carregar os dados de progresso do usuário
+            loadProgressFromFacebook();
+            
+            // Inicializar a aplicação após login
+            initAppAfterLogin();
+        });
+    } else {
+        // O usuário não está logado ou não autorizou o aplicativo
+        document.getElementById('login-container').style.display = 'flex';
+        document.getElementById('user-info').style.display = 'none';
+    }
+}
+
+// Função para carregar uma lição
+function loadLesson(lessonIndex) {
+    const lesson = lessons[lessonIndex];
+    currentLessonName = lesson.name;
+    
+    // Atualizar o título da lição atual
+    document.getElementById('current-lesson').textContent = currentLessonName;
+    
+    // Configurar o vídeo
+    videoElement.src = lesson.videoUrl;
+    videoElement.load();
+    
+    // Carregar o arquivo SRT
+    const srtUrl = getSrtCdnUrl(lesson.srtFile);
+    loadSrtFromUrl(srtUrl).then(success => {
+        if (success) {
+            // Verificar se há progresso salvo para esta lição para o usuário atual
+            if (currentUser && userProgressData[currentLessonName]) {
+                const savedProgress = userProgressData[currentLessonName];
+                
+                if (savedProgress.fraseIndex < frases.length) {
+                    const retomar = confirm(`Você tem um progresso salvo nesta lição. Deseja continuar de onde parou? (Frase ${savedProgress.fraseIndex + 1})`);
+                    
+                    if (retomar) {
+                        indiceFrase = savedProgress.fraseIndex;
+                        acertos = savedProgress.acertos || 0;
+                        fraseAtual = frases[indiceFrase];
+                        palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+                        palavrasClicadas = [];
+                        fraseAcertada = false;
+                        progresso = indiceFrase;
+                        
+                        criarPalavras();
+                        atualizarFrase();
+                        atualizarProgresso();
+                        atualizarPlacar();
+                    }
+                }
+            }
+        }
+    });
+    
+    // Fechar o menu
+    toggleMenu();
+    
+    // Salvar esta lição como a última acessada para o usuário atual
+    if (currentUser) {
+        saveLastAccessedLesson(lessonIndex);
+    }
+}
+
+// Função para salvar o progresso do usuário
+function saveUserProgress() {
+    if (!currentUser || !currentLessonName) return;
+    
+    saveProgressToFacebook(currentLessonName, indiceFrase, acertos);
+}
+
 // Função para inicializar a aplicação após o login
 function initAppAfterLogin() {
     // Inicializar eventos do menu
@@ -1168,6 +1282,23 @@ function initAppAfterLogin() {
 window.addEventListener('DOMContentLoaded', function() {
     // Se o usuário já estiver logado, os eventos serão inicializados em handleFacebookLoginResponse
     // Caso contrário, o FB.getLoginStatus já será chamado quando o SDK do Facebook estiver carregado
+    
+    // Adicionar os eventos para o botão de login
+    document.getElementById('facebook-login-button').addEventListener('click', function() {
+        FB.login(function(response) {
+            handleFacebookLoginResponse(response);
+        }, {scope: 'public_profile,email'});
+    });
+    
+    // Adicionar evento para o botão de logout
+    document.getElementById('logout-button').addEventListener('click', function() {
+        FB.logout(function(response) {
+            currentUser = null;
+            document.getElementById('login-container').style.display = 'flex';
+            document.getElementById('user-info').style.display = 'none';
+            saveAllUserProgress(); // Salvar progresso antes de deslogar
+        });
+    });
 });
         </script>
     </body>
