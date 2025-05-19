@@ -2,8 +2,8 @@
   "objects": {
     "lesson": {
       "properties": {
-        "url": { "text": "URL" },
-        "title": { "text": "Título" }
+        "url": { "text": "https://crisclei2022.github.io/listeningpro/menu.html" },
+        "title": { "text": "ListeningPro" }
       }
     }
   },
