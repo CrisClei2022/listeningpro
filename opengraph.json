@@ -1,0 +1,22 @@
+{
+  "objects": {
+    "lesson": {
+      "properties": {
+        "url": { "text": "URL" },
+        "title": { "text": "Título" }
+      }
+    }
+  },
+  "actions": {
+    "complete": {
+      "object": "lesson",
+      "properties": {
+        "progress": { "number": "Progresso" },
+        "score": { "number": "Pontuação" }
+      }
+    },
+    "access": {
+      "object": "lesson"
+    }
+  }
+}
