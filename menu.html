@@ -10,8 +10,9 @@
     <meta property="og:url" content="https://www.meusite.com/pagina" />
     <meta property="og:image" content="https://www.meusite.com/imagens/miniatura.jpg" />
     <meta property="og:description" content="Descrição da página" />
-    <!-- Parse SDK -->
-    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         html {
             background-color: #2b2e31;
@@ -505,8 +506,8 @@
             <h2 class="auth-title">Bem-vindo ao Listening Pro</h2>
             <div id="login-form">
                 <div class="form-group">
-                    <label for="username">Nome de usuário:</label>
-                    <input type="text" id="username" placeholder="Digite seu nome de usuário">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" placeholder="Digite seu email">
                 </div>
                 <div class="form-group">
                     <label for="password">Senha:</label>
@@ -576,9 +577,10 @@
     </div>
     
     <script>
-        // Inicializar Parse com suas credenciais do Back4App
-        Parse.initialize("0MXIRTN2W8Gxg7PhLnP9KwPxhjCmWaYnSmqVqPTF", "sCPI331cEZX70tvl2Z5Tp7Sj0TbyuHBfN1NqU7Wt");
-        Parse.serverURL = "https://parseapi.back4app.com";
+        // Inicializar Supabase com suas credenciais
+        const SUPABASE_URL = 'https://rnogpegpfzzhrxjxtxqn.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJub2dwZWdwZnp6aHJ4anh0eHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDEyNTAsImV4cCI6MjA2MzI3NzI1MH0.TStNnAKgZBoYnxP-CZZEbChvE3FRlqJ5NruJbqWIGN0';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // Variáveis de autenticação
         let currentUser = null;
@@ -1018,674 +1020,396 @@
         document.getElementById('menu-button').onclick = toggleMenu;
         document.querySelector('.close-button').onclick = toggleMenu;
         
-        
-        // *************** Inicializar a aplicação
-function init() {
-    initializeMenuButtons();
-    
-    // Mostrar inicialmente a mensagem para selecionar uma lição
-    document.getElementById('current-lesson').textContent = "Selecione uma lição no menu";
-    
-    // Verificar se há algum parâmetro na URL para carregar uma lição específica
-    const urlParams = new URLSearchParams(window.location.search);
-    const lessonParam = urlParams.get('lesson');
-    
-    if (lessonParam !== null && !isNaN(lessonParam) && lessons[parseInt(lessonParam)]) {
-        // Carregar a lição especificada pelo parâmetro da URL
-        loadLesson(parseInt(lessonParam));
-    } else {
-        // Se não houver parâmetro, abrir o menu automaticamente
-        setTimeout(() => {
-            toggleMenu();
-        }, 500);
-    }
-    
-    // Adicionar listener para teclas de atalho
-    document.addEventListener('keydown', function(event) {
-        // Tecla ESC para fechar ou abrir o menu
-        if (event.key === 'Escape') {
-            const menuOverlay = document.getElementById('menu-overlay');
-            if (menuOverlay.classList.contains('active')) {
-                toggleMenu();
-            }
-        }
-        
-        // Tecla ESPAÇO para reproduzir/pausar o trecho atual
-        if (event.code === 'Space' && !event.target.matches('input, textarea')) {
-            event.preventDefault();
-            if (playerReady && videoElement.paused) {
-                reproduzirTrechoAtual();
-            } else {
-                videoElement.pause();
-                pararMonitorTempo();
-            }
-        }
-        
-        // Tecla ENTER para avançar quando disponível
-        if (event.key === 'Enter') {
-            const avancarBtn = document.getElementById('avancar');
-            if (avancarBtn.style.display !== 'none') {
-                avancarBtn.click();
-            }
-        }
-    });
-    
-    // Adicionar evento para restaurar a interface quando o vídeo terminar
-    videoElement.addEventListener('ended', function() {
-        pararMonitorTempo();
-    });
-    
-// Back4App Integration for ListeningPro
-
-// Initialize Parse with your Back4App credentials
-Parse.initialize("0MXIRTN2W8Gxg7PhLnP9KwPxhjCmWaYnSmqVqPTF", "sCPI331cEZX70tvl2Z5Tp7Sj0TbyuHBfN1NqU7Wt");
-Parse.serverURL = "https://parseapi.back4app.com";
-
-// Authentication variables
-let currentUser = null;
-
-// Functions for user authentication
-async function signUp(username, password, email) {
-    try {
-        // Create a new Parse User
-        const user = new Parse.User();
-        user.set("username", username);
-        user.set("password", password);
-        user.set("email", email);
-        
-        await user.signUp();
-        currentUser = Parse.User.current();
-        return true;
-    } catch (error) {
-        console.error("Error signing up:", error);
-        alert(`Error signing up: ${error.message}`);
-        return false;
-    }
-}
-
-async function logIn(username, password) {
-    try {
-        const user = await Parse.User.logIn(username, password);
-        currentUser = user;
-        return true;
-    } catch (error) {
-        console.error("Error logging in:", error);
-        alert(`Error logging in: ${error.message}`);
-        return false;
-    }
-}
-
-function logOut() {
-    Parse.User.logOut();
-    currentUser = null;
-}
-
-// Check if user is already logged in
-async function checkCurrentUser() {
-    currentUser = Parse.User.current();
-    if (currentUser) {
-        document.getElementById('user-info').textContent = `Logged in as: ${currentUser.get('username')}`;
-        document.getElementById('login-container').style.display = 'none';
-        document.getElementById('logout-button').style.display = 'block';
-        
-        // Load the last lesson if available
-        await carregarUltimaLicaoDoServidor();
-        return true;
-    } else {
-        document.getElementById('login-container').style.display = 'block';
-        document.getElementById('logout-button').style.display = 'none';
-        document.getElementById('user-info').textContent = 'Not logged in';
-        return false;
-    }
-}
-
-// Function to save the last accessed lesson to Back4App
-async function salvarUltimaLicao(lessonIndex) {
-    if (!currentUser) return;
-    
-    try {
-        // Check if the user already has a preference object
-        const PreferenceClass = Parse.Object.extend("UserPreferences");
-        const query = new Parse.Query(PreferenceClass);
-        query.equalTo("user", currentUser);
-        
-        let preference = await query.first();
-        
-        if (!preference) {
-            // Create a new preference object if none exists
-            preference = new PreferenceClass();
-            preference.set("user", currentUser);
-        }
-        
-        // Set the last lesson
-        preference.set("lastLessonIndex", lessonIndex);
-        preference.set("lastLessonName", lessons[lessonIndex].name);
-        
-        // Save to Back4App
-        await preference.save();
-        console.log("Last lesson saved successfully");
-    } catch (error) {
-        console.error("Error saving last lesson:", error);
-    }
-}
-
-// Function to load the last accessed lesson from Back4App
-async function carregarUltimaLicaoDoServidor() {
-    if (!currentUser) return null;
-    
-    try {
-        const PreferenceClass = Parse.Object.extend("UserPreferences");
-        const query = new Parse.Query(PreferenceClass);
-        query.equalTo("user", currentUser);
-        
-        const preference = await query.first();
-        
-        if (preference) {
-            const lastIndex = preference.get("lastLessonIndex");
-            if (lastIndex !== undefined && lessons[lastIndex]) {
-                const carregarUltimaLicao = confirm(`Deseja carregar a última lição acessada? (${lessons[lastIndex].name})`);
-                if (carregarUltimaLicao) {
-                    loadLesson(lastIndex);
-                }
-            }
-        }
-    } catch (error) {
-        console.error("Error loading last lesson:", error);
-    }
-}
-
-// Function to save progress for a specific lesson to Back4App
-async function salvarProgressoDoServidor(lessonName, fraseIndex, acertos) {
-    if (!currentUser) return;
-    
-    try {
-        // Check if there's existing progress for this lesson
-        const ProgressClass = Parse.Object.extend("LessonProgress");
-        const query = new Parse.Query(ProgressClass);
-        query.equalTo("user", currentUser);
-        query.equalTo("lessonName", lessonName);
-        
-        let progress = await query.first();
-        
-        if (!progress) {
-            // Create new progress object if none exists
-            progress = new ProgressClass();
-            progress.set("user", currentUser);
-            progress.set("lessonName", lessonName);
-        }
-        
-        // Update progress data
-        progress.set("fraseIndex", fraseIndex);
-        progress.set("acertos", acertos);
-        progress.set("timestamp", new Date());
-        progress.set("totalFrases", frases.length);
-        
-        // Save to Back4App
-        await progress.save();
-        console.log("Progress saved successfully");
-    } catch (error) {
-        console.error("Error saving progress:", error);
-    }
-}
-
-// Function to load progress for a specific lesson from Back4App
-async function carregarProgressoDoServidor(lessonName) {
-    if (!currentUser) return null;
-    
-    try {
-        const ProgressClass = Parse.Object.extend("LessonProgress");
-        const query = new Parse.Query(ProgressClass);
-        query.equalTo("user", currentUser);
-        query.equalTo("lessonName", lessonName);
-        
-        const progress = await query.first();
-        
-        if (progress) {
-            return {
-                fraseIndex: progress.get("fraseIndex"),
-                acertos: progress.get("acertos"),
-                timestamp: progress.get("timestamp")
-            };
-        }
-        
-        return null;
-    } catch (error) {
-        console.error("Error loading progress:", error);
-        return null;
-    }
-}
-
-// Modified function to auto-save progress periodically
-function autoSaveProgress() {
-    if (!currentUser || !currentLessonName) return;
-    
-    // Save progress every minute
-    setInterval(() => {
-        salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
-    }, 60000); // 60 seconds
-}
-
-// Function to get progress summary for all lessons
-async function getProgressSummary() {
-    if (!currentUser) return [];
-    
-    try {
-        const ProgressClass = Parse.Object.extend("LessonProgress");
-        const query = new Parse.Query(ProgressClass);
-        query.equalTo("user", currentUser);
-        
-        const results = await query.find();
-        
-        return results.map(progress => {
-            const lessonName = progress.get("lessonName");
-            const fraseIndex = progress.get("fraseIndex");
-            const totalFrases = progress.get("totalFrases") || 0;
-            const acertos = progress.get("acertos") || 0;
-            const timestamp = progress.get("timestamp");
-            
-            // Calculate percentage complete
-            const percentComplete = totalFrases > 0 ? Math.round((fraseIndex / totalFrases) * 100) : 0;
-            
-            return {
-                lessonName,
-                fraseIndex,
-                totalFrases,
-                acertos,
-                percentComplete,
-                lastUpdated: timestamp
-            };
-        });
-    } catch (error) {
-        console.error("Error getting progress summary:", error);
-        return [];
-    }
-}
-
-// Modified loadLesson function to incorporate Back4App
-async function loadLesson(lessonIndex) {
-    currentLessonIndex = lessonIndex;
-    const lesson = lessons[lessonIndex];
-    currentLessonName = lesson.name;
-    
-    // Update the current lesson title
-    document.getElementById('current-lesson').textContent = currentLessonName;
-    
-    // Configure the video
-    videoElement.src = lesson.videoUrl;
-    videoElement.load();
-    
-    // Load the SRT file
-    const srtUrl = getSrtCdnUrl(lesson.srtFile);
-    const success = await loadSrtFromUrl(srtUrl);
-    
-    if (success && currentUser) {
-        // Check for saved progress for this lesson
-        const progressoSalvo = await carregarProgressoDoServidor(currentLessonName);
-        
-        if (progressoSalvo && progressoSalvo.fraseIndex < frases.length) {
-            const retomar = confirm(`Você tem um progresso salvo nesta lição. Deseja continuar de onde parou? (Frase ${progressoSalvo.fraseIndex + 1})`);
-            
-            if (retomar) {
-                indiceFrase = progressoSalvo.fraseIndex;
-                acertos = progressoSalvo.acertos || 0;
-                fraseAtual = frases[indiceFrase];
-                palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
-                palavrasClicadas = [];
-                fraseAcertada = false;
-                progresso = indiceFrase;
+        // Functions for user authentication with Supabase
+        async function signUp(email, password) {
+            try {
+                // Mostrar mensagem de carregamento
+                document.getElementById('auth-message').textContent = "Registrando...";
                 
-                criarPalavras();
-                atualizarFrase();
-                atualizarProgresso();
-                atualizarPlacar();
+                // Registrar usuário com Supabase
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                currentUser = data.user;
+                
+                // Atualizar a interface após registro bem-sucedido
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('username-display').textContent = email;
+                
+                // Limpar mensagem
+                document.getElementById('auth-message').textContent = "";
+                
+                // Criar tabelas necessárias se não existirem
+                await initializeDatabase();
+                
+                return true;
+            } catch (error) {
+                console.error("Error signing up:", error);
+                document.getElementById('auth-message').textContent = `Erro ao registrar: ${error.message}`;
+                return false;
+            }
+        }
+
+        async function logIn(email, password) {
+            try {
+                // Mostrar mensagem de carregamento
+                document.getElementById('auth-message').textContent = "Entrando...";
+                
+                // Login com Supabase
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                currentUser = data.user;
+                
+                // Atualizar a interface após login bem-sucedido
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('username-display').textContent = email;
+                
+                // Limpar mensagem
+                document.getElementById('auth-message').textContent = "";
+                
+                return true;
+            } catch (error) {
+                console.error("Error logging in:", error);
+                document.getElementById('auth-message').textContent = `Erro ao entrar: ${error.message}`;
+                return false;
+            }
+        }
+
+        async function logOut() {
+            try {
+                await supabase.auth.signOut();
+                currentUser = null;
+                
+                // Mostrar tela de login novamente
+                document.getElementById('auth-container').style.display = 'flex';
+                document.getElementById('username-display').textContent = "";
+            } catch (error) {
+                console.error("Error logging out:", error);
+                alert("Erro ao sair: " + error.message);
             }
         }
         
-        // Save this lesson as the last accessed one
-        salvarUltimaLicao(lessonIndex);
-    }
-    
-    // Close the menu
-    toggleMenu();
-}
+        // Inicializar o banco de dados (criar tabelas se não existirem)
+        async function initializeDatabase() {
+            try {
+                // Verificar se as tabelas existem e criar se necessário
+                // Tabela para preferências do usuário
+                const { error: prefError } = await supabase
+                    .from('user_preferences')
+                    .select('id')
+                    .limit(1);
+                
+                if (prefError && prefError.code === '42P01') {
+                    // Tabela não existe, criar
+                    await supabase.rpc('create_user_preferences_table');
+                }
+                
+                // Tabela para progresso das lições
+                const { error: progError } = await supabase
+                    .from('lesson_progress')
+                    .select('id')
+                    .limit(1);
+                
+                if (progError && progError.code === '42P01') {
+                    // Tabela não existe, criar
+                    await supabase.rpc('create_lesson_progress_table');
+                }
+            } catch (error) {
+                console.error("Error initializing database:", error);
+            }
+        }
+        
+        // Função para salvar a última lição acessada no Supabase
+        async function salvarUltimaLicao(lessonIndex) {
+            if (!currentUser) return;
+            
+            try {
+                // Verificar se o usuário já tem um registro de preferência
+                const { data, error } = await supabase
+                    .from('user_preferences')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') {
+                    // Erro diferente de "não encontrado"
+                    throw error;
+                }
+                
+                if (data) {
+                    // Atualizar registro existente
+                    await supabase
+                        .from('user_preferences')
+                        .update({
+                            last_lesson_index: lessonIndex,
+                            last_lesson_name: lessons[lessonIndex].name,
+                            updated_at: new Date()
+                        })
+                        .eq('user_id', currentUser.id);
+                } else {
+                    // Criar novo registro
+                    await supabase
+                        .from('user_preferences')
+                        .insert({
+                            user_id: currentUser.id,
+                            last_lesson_index: lessonIndex,
+                            last_lesson_name: lessons[lessonIndex].name
+                        });
+                }
+                
+                console.log("Última lição salva com sucesso");
+            } catch (error) {
+                console.error("Erro ao salvar última lição:", error);
+            }
+        }
 
-// Modified avancar button click handler to save progress
-document.getElementById('avancar').onclick = function() {
-    indiceFrase++;
-    if (indiceFrase >= frases.length) {
-        alert("Parabéns! Você completou todas as frases!");
-        indiceFrase = 0;
-        acertos = 0;
-        progresso = 0;
-        atualizarPlacar();
-        atualizarProgresso();
-    }
-    fraseAtual = frases[indiceFrase];
-    palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
-    palavrasClicadas = [];
-    fraseAcertada = false;
-    criarPalavras();
-    atualizarFrase();
-    document.getElementById('avancar').style.display = 'none';
-    reproduzirTrechoAtual();
-    
-    // Save progress to Back4App after advancing
-    if (currentUser && currentLessonName) {
-        salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
-    }
-};
+        // Função para carregar a última lição acessada do Supabase
+        async function carregarUltimaLicaoDoServidor() {
+            if (!currentUser) return null;
+            
+            try {
+                const { data, error } = await supabase
+                    .from('user_preferences')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .single();
+                
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        // Registro não encontrado
+                        return null;
+                    }
+                    throw error;
+                }
+                
+                if (data && data.last_lesson_index !== undefined && lessons[data.last_lesson_index]) {
+                    const carregarUltimaLicao = confirm(`Deseja carregar a última lição acessada? (${lessons[data.last_lesson_index].name})`);
+                    if (carregarUltimaLicao) {
+                        loadLesson(data.last_lesson_index);
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao carregar última lição:", error);
+            }
+        }
 
-// Add login functionality to the page
-function setupAuthUI() {
-    // Create login/signup container if it doesn't exist
-    if (!document.getElementById('auth-container')) {
-        const authContainer = document.createElement('div');
-        authContainer.id = 'auth-container';
-        
-        // Add login form
-        authContainer.innerHTML = `
-            <div class="auth-section">
-                <div id="user-info">Not logged in</div>
-                <div id="login-container">
-                    <h3>Login or Sign Up</h3>
-                    <input type="text" id="username" placeholder="Username" />
-                    <input type="password" id="password" placeholder="Password" />
-                    <input type="email" id="email" placeholder="Email (for signup)" />
-                    <div class="auth-buttons">
-                        <button id="login-button">Login</button>
-                        <button id="signup-button">Sign Up</button>
-                    </div>
-                </div>
-                <button id="logout-button" style="display: none;">Logout</button>
-            </div>
-        `;
-        
-        // Add styles for the auth container
-        const styleElement = document.createElement('style');
-        styleElement.textContent = `
-            #auth-container {
-                position: fixed;
-                top: 20px;
-                left: 20px;
-                background-color: rgba(43, 46, 49, 0.9);
-                border-radius: 10px;
-                padding: 15px;
-                z-index: 900;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-                color: #f9fff2;
-                width: 250px;
+        // Função para salvar progresso de uma lição específica no Supabase
+        async function salvarProgressoDoServidor(lessonName, fraseIndex, acertos) {
+            if (!currentUser) return;
+            
+            try {
+                // Verificar se há progresso existente para esta lição
+                const { data, error } = await supabase
+                    .from('lesson_progress')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('lesson_name', lessonName)
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') {
+                    // Erro diferente de "não encontrado"
+                    throw error;
+                }
+                
+                if (data) {
+                    // Atualizar registro existente
+                    await supabase
+                        .from('lesson_progress')
+                        .update({
+                            frase_index: fraseIndex,
+                            acertos: acertos,
+                            total_frases: frases.length,
+                            updated_at: new Date()
+                        })
+                        .eq('id', data.id);
+                } else {
+                    // Criar novo registro
+                    await supabase
+                        .from('lesson_progress')
+                        .insert({
+                            user_id: currentUser.id,
+                            lesson_name: lessonName,
+                            frase_index: fraseIndex,
+                            acertos: acertos,
+                            total_frases: frases.length
+                        });
+                }
+                
+                console.log("Progresso salvo com sucesso");
+            } catch (error) {
+                console.error("Erro ao salvar progresso:", error);
+            }
+        }
+
+        // Função para carregar progresso de uma lição específica do Supabase
+        async function carregarProgressoDoServidor(lessonName) {
+            if (!currentUser) return null;
+            
+            try {
+                const { data, error } = await supabase
+                    .from('lesson_progress')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('lesson_name', lessonName)
+                    .single();
+                
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        // Registro não encontrado
+                        return null;
+                    }
+                    throw error;
+                }
+                
+                if (data) {
+                    return {
+                        fraseIndex: data.frase_index,
+                        acertos: data.acertos,
+                        timestamp: data.updated_at
+                    };
+                }
+                
+                return null;
+            } catch (error) {
+                console.error("Erro ao carregar progresso:", error);
+                return null;
+            }
+        }
+
+        // Função para auto-salvar progresso periodicamente
+        function autoSaveProgress() {
+            if (!currentUser || !currentLessonName) return;
+            
+            // Salvar progresso a cada minuto
+            setInterval(() => {
+                salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
+            }, 60000); // 60 segundos
+        }
+
+        // Verificar se o usuário já está logado
+        async function checkCurrentUser() {
+            const { data, error } = await supabase.auth.getSession();
+            
+            if (error) {
+                console.error("Error checking session:", error);
+                return false;
             }
             
-            #auth-container input {
-                display: block;
-                width: 100%;
-                margin: 5px 0;
-                padding: 8px;
-                border-radius: 5px;
-                border: 1px solid #a5b68f;
+            if (data.session) {
+                currentUser = data.session.user;
+                // Usuário já está logado, esconder tela de login
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('username-display').textContent = currentUser.email;
+                return true;
+            } else {
+                // Usuário não está logado, mostrar tela de login
+                document.getElementById('auth-container').style.display = 'flex';
+                return false;
             }
-            
-            .auth-buttons {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 10px;
-            }
-            
-            #auth-container button {
-                padding: 8px 15px;
-                margin: 5px 0;
-            }
-            
-            #user-info {
-                margin-bottom: 10px;
-                font-weight: bold;
-            }
-            
-            .auth-section h3 {
-                margin-top: 0;
-            }
-        `;
-        
-        document.head.appendChild(styleElement);
-        document.body.insertBefore(authContainer, document.body.firstChild);
-        
-        // Add event listeners for auth buttons
-        document.getElementById('login-button').addEventListener('click', async () => {
-            const username = document.getElementById('username').value;
+        }
+
+        // Adicionar event listeners para botões de login e registro
+        document.getElementById('login-btn').addEventListener('click', async function() {
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
-            if (!username || !password) {
-                alert('Por favor, preencha todos os campos!');
+            if (!email || !password) {
+                document.getElementById('auth-message').textContent = "Por favor, preencha todos os campos!";
                 return;
             }
             
-            const success = await logIn(username, password);
-            if (success) {
-                checkCurrentUser();
+            await logIn(email, password);
+            if (currentUser) {
                 carregarUltimaLicaoDoServidor();
                 autoSaveProgress();
             }
         });
-        
-        document.getElementById('signup-button').addEventListener('click', async () => {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+
+        document.getElementById('register-btn').addEventListener('click', async function() {
             const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             
-            if (!username || !password || !email) {
-                alert('Por favor, preencha todos os campos!');
+            if (!email || !password) {
+                document.getElementById('auth-message').textContent = "Por favor, preencha todos os campos!";
                 return;
             }
             
-            const success = await signUp(username, password, email);
-            if (success) {
-                checkCurrentUser();
+            await signUp(email, password);
+            if (currentUser) {
                 autoSaveProgress();
             }
         });
-        
-        document.getElementById('logout-button').addEventListener('click', () => {
+
+        document.getElementById('logout-btn').addEventListener('click', function() {
             logOut();
-            checkCurrentUser();
         });
-    }
-}
 
-// Add a progress section to the menu
-function addProgressSection() {
-    const menuItems = document.getElementById('menu-items');
-    
-    // Create progress section if it doesn't exist
-    if (!document.getElementById('progress-section')) {
-        const progressSection = document.createElement('div');
-        progressSection.id = 'progress-section';
-        progressSection.innerHTML = `
-            <h3 class="menu-title">Seu Progresso</h3>
-            <div id="progress-list">
-                <p>Faça login para ver seu progresso</p>
-            </div>
-        `;
-        
-        menuItems.appendChild(progressSection);
-    }
-}
-
-// Update the progress display in the menu
-async function updateProgressDisplay() {
-    if (!currentUser) return;
-    
-    const progressList = document.getElementById('progress-list');
-    progressList.innerHTML = '<div class="loading-progress">Carregando progresso...</div>';
-    
-    const progressData = await getProgressSummary();
-    
-    if (progressData.length === 0) {
-        progressList.innerHTML = '<p>Ainda não há progresso registrado</p>';
-        return;
-    }
-    
-    let progressHTML = '';
-    
-    progressData.forEach(item => {
-        const date = new Date(item.lastUpdated);
-        const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-        
-        progressHTML += `
-            <div class="progress-item">
-                <h4>${item.lessonName}</h4>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${item.percentComplete}%"></div>
-                </div>
-                <div class="progress-details">
-                    <span>${item.percentComplete}% completo</span>
-                    <span>Frase: ${item.fraseIndex + 1}/${item.totalFrases}</span>
-                    <span>Acertos: ${item.acertos}</span>
-                    <span>Última atualização: ${formattedDate}</span>
-                </div>
-            </div>
-        `;
-    });
-    
-    progressList.innerHTML = progressHTML;
-    
-    // Add CSS for progress items
-    if (!document.getElementById('progress-styles')) {
-        const styleElement = document.createElement('style');
-        styleElement.id = 'progress-styles';
-        styleElement.textContent = `
-            .progress-item {
-                background-color: rgba(0, 0, 0, 0.2);
-                border-radius: 8px;
-                padding: 12px;
-                margin-bottom: 15px;
-            }
+        // Inicializar a aplicação quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', async function() {
+            initializeMenuButtons();
+            await checkCurrentUser();
             
-            .progress-item h4 {
-                margin-top: 0;
-                margin-bottom: 8px;
-                font-size: 16px;
-            }
+            // Mostrar inicialmente a mensagem para selecionar uma lição
+            document.getElementById('current-lesson').textContent = "Selecione uma lição no menu";
             
-            .progress-bar {
-                height: 8px;
-                background-color: rgba(255, 255, 255, 0.2);
-                border-radius: 4px;
-                overflow: hidden;
-                margin-bottom: 8px;
-            }
+            // Verificar se há algum parâmetro na URL para carregar uma lição específica
+            const urlParams = new URLSearchParams(window.location.search);
+            const lessonParam = urlParams.get('lesson');
             
-            .progress-fill {
-                height: 100%;
-                background: linear-gradient(90deg, #4CAF50, #8BC34A);
-                border-radius: 4px;
-            }
-            
-            .progress-details {
-                display: flex;
-                flex-wrap: wrap;
-                font-size: 12px;
-                color: rgba(255, 255, 255, 0.8);
-            }
-            
-            .progress-details span {
-                margin-right: 10px;
-                margin-bottom: 5px;
-            }
-            
-            .loading-progress {
-                text-align: center;
-                padding: 10px;
-                color: rgba(255, 255, 255, 0.7);
-            }
-        `;
-        document.head.appendChild(styleElement);
-    }
-}
-
-// Modified toggleMenu function to update progress display
-function toggleMenu() {
-    const menuButton = document.getElementById('menu-button');
-    const menuOverlay = document.getElementById('menu-overlay');
-    
-    menuButton.classList.toggle('active');
-    menuOverlay.classList.toggle('active');
-    
-    // If the menu is being opened and user is logged in, update progress display
-    if (menuButton.classList.contains('active') && currentUser) {
-        updateProgressDisplay();
-    }
-}
-
-// Extend the init function to include authentication setup
-function init() {
-    initializeMenuButtons();
-    setupAuthUI();
-    addProgressSection();
-    
-    // Check if user is already logged in
-    checkCurrentUser().then(isLoggedIn => {
-        if (isLoggedIn) {
-            autoSaveProgress();
-        }
-    });
-    
-    // Show initially the message to select a lesson
-    document.getElementById('current-lesson').textContent = "Selecione uma lição no menu";
-    
-    // Check if there's a parameter in the URL to load a specific lesson
-    const urlParams = new URLSearchParams(window.location.search);
-    const lessonParam = urlParams.get('lesson');
-    
-    if (lessonParam !== null && !isNaN(lessonParam) && lessons[parseInt(lessonParam)]) {
-        // Load the lesson specified by the URL parameter
-        loadLesson(parseInt(lessonParam));
-    } else {
-        // If there's no parameter, open the menu automatically
-        setTimeout(() => {
-            toggleMenu();
-        }, 500);
-    }
-    
-    // Add listener for shortcut keys
-    document.addEventListener('keydown', function(event) {
-        // ESC key to close or open the menu
-        if (event.key === 'Escape') {
-            const menuOverlay = document.getElementById('menu-overlay');
-            if (menuOverlay.classList.contains('active')) {
-                toggleMenu();
-            }
-        }
-        
-        // SPACE key to play/pause the current section
-        if (event.code === 'Space' && !event.target.matches('input, textarea')) {
-            event.preventDefault();
-            if (playerReady && videoElement.paused) {
-                reproduzirTrechoAtual();
+            if (lessonParam !== null && !isNaN(lessonParam) && lessons[parseInt(lessonParam)]) {
+                // Carregar a lição especificada pelo parâmetro da URL
+                loadLesson(parseInt(lessonParam));
             } else {
-                videoElement.pause();
+                // Se não houver parâmetro, abrir o menu automaticamente
+                setTimeout(() => {
+                    toggleMenu();
+                }, 500);
+            }
+            
+            // Adicionar listener para teclas de atalho
+            document.addEventListener('keydown', function(event) {
+                // ESC key to close or open the menu
+                if (event.key === 'Escape') {
+                    const menuOverlay = document.getElementById('menu-overlay');
+                    if (menuOverlay.classList.contains('active')) {
+                        toggleMenu();
+                    }
+                }
+                
+                // SPACE key to play/pause the current section
+                if (event.code === 'Space' && !event.target.matches('input, textarea')) {
+                    event.preventDefault();
+                    if (playerReady && videoElement.paused) {
+                        reproduzirTrechoAtual();
+                    } else {
+                        videoElement.pause();
+                        pararMonitorTempo();
+                    }
+                }
+                
+                // ENTER key to advance when available
+                if (event.key === 'Enter') {
+                    const avancarBtn = document.getElementById('avancar');
+                    if (avancarBtn.style.display !== 'none') {
+                        avancarBtn.click();
+                    }
+                }
+            });
+            
+            // Add event to restore the interface when the video ends
+            videoElement.addEventListener('ended', function() {
                 pararMonitorTempo();
-            }
-        }
-        
-        // ENTER key to advance when available
-        if (event.key === 'Enter') {
-            const avancarBtn = document.getElementById('avancar');
-            if (avancarBtn.style.display !== 'none') {
-                avancarBtn.click();
-            }
-        }
-    });
-    
-    // Add event to restore the interface when the video ends
-    videoElement.addEventListener('ended', function() {
-        pararMonitorTempo();
-    });
-}
-
-// Initialize the application when the DOM is loaded
-document.addEventListener('DOMContentLoaded', init);
-
+            });
+        });
     </script>    
-
 </body>
-</html> 
+</html>
