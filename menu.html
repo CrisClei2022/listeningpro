@@ -476,7 +476,11 @@
             color: #ff6666;
             text-align: center;
             margin-top: 10px;
-            height: 20px;
+            min-height: 40px;
+        }
+
+        .auth-message.success {
+            color: #4CAF50;
         }
 
         /* User info display */
@@ -979,11 +983,54 @@
                 });
             }
             
+            // Verificar se um email já existe no Supabase
+            async function checkEmailExists(email) {
+                try {
+                    // Tentar fazer login com um email que sabemos que não existe
+                    // Se o erro for "Invalid login credentials", significa que o email existe
+                    // Se o erro for outro, como "Email not confirmed", também significa que o email existe
+                    const { error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: "senha_temporaria_para_verificacao"
+                    });
+                    
+                    if (error) {
+                        // Se o erro for "Invalid login credentials", o email existe mas a senha está errada
+                        // Se for "Email not confirmed", o email existe mas não foi confirmado
+                        if (error.message.includes("Invalid login credentials") || 
+                            error.message.includes("Email not confirmed")) {
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error("Erro ao verificar email:", error);
+                    return false;
+                }
+            }
+            
             // Functions for user authentication with Supabase
             async function signUp(email, password) {
                 try {
                     // Mostrar mensagem de carregamento
-                    document.getElementById('auth-message').textContent = "Registrando...";
+                    const authMessage = document.getElementById('auth-message');
+                    authMessage.textContent = "Verificando email...";
+                    authMessage.className = "auth-message";
+                    
+                    console.log("Verificando se o email já existe:", email);
+                    
+                    // Verificar se o email já existe
+                    const emailExists = await checkEmailExists(email);
+                    
+                    if (emailExists) {
+                        console.log("Email já existe:", email);
+                        authMessage.textContent = "Este email já está registrado. Por favor, use outro email ou tente fazer login.";
+                        return false;
+                    }
+                    
+                    // Email não existe, prosseguir com o registro
+                    authMessage.textContent = "Registrando...";
                     
                     console.log("Iniciando registro com:", email);
                     
@@ -999,18 +1046,12 @@
                     }
                     
                     console.log("Registro bem-sucedido:", data);
-                    currentUser = data.user;
                     
-                    // Atualizar a interface após registro bem-sucedido
-                    document.getElementById('auth-container').style.display = 'none';
-                    document.getElementById('username-display').textContent = email;
+                    // Mostrar mensagem de sucesso e instruções para confirmar email
+                    authMessage.textContent = "Registro realizado com sucesso! Um email de confirmação foi enviado. Por favor, verifique sua caixa de entrada e confirme seu email antes de fazer login.";
+                    authMessage.className = "auth-message success";
                     
-                    // Limpar mensagem
-                    document.getElementById('auth-message').textContent = "";
-                    
-                    // Criar tabelas necessárias se não existirem
-                    await initializeDatabase();
-                    
+                    // Não fazer login automático, aguardar confirmação de email
                     return true;
                 } catch (error) {
                     console.error("Error signing up:", error);
@@ -1034,7 +1075,16 @@
                     
                     if (error) {
                         console.error("Erro durante login:", error);
-                        throw error;
+                        
+                        // Verificar se o erro é de email não confirmado
+                        if (error.message.includes("Email not confirmed")) {
+                            document.getElementById('auth-message').textContent = 
+                                "Email não confirmado. Por favor, verifique sua caixa de entrada e clique no link de confirmação antes de fazer login.";
+                        } else {
+                            throw error;
+                        }
+                        
+                        return false;
                     }
                     
                     console.log("Login bem-sucedido:", data);
@@ -1063,6 +1113,8 @@
                     // Mostrar tela de login novamente
                     document.getElementById('auth-container').style.display = 'flex';
                     document.getElementById('username-display').textContent = "";
+                    document.getElementById('auth-message').textContent = "";
+                    document.getElementById('auth-message').className = "auth-message";
                 } catch (error) {
                     console.error("Error logging out:", error);
                     alert("Erro ao sair: " + error.message);
@@ -1310,8 +1362,8 @@
                     return;
                 }
                 
-                await logIn(email, password);
-                if (currentUser) {
+                const success = await logIn(email, password);
+                if (success && currentUser) {
                     carregarUltimaLicaoDoServidor();
                     autoSaveProgress();
                 }
@@ -1326,11 +1378,13 @@
                     return;
                 }
                 
+                if (password.length < 6) {
+                    document.getElementById('auth-message').textContent = "A senha deve ter pelo menos 6 caracteres.";
+                    return;
+                }
+                
                 console.log("Botão de registro clicado para:", email);
                 await signUp(email, password);
-                if (currentUser) {
-                    autoSaveProgress();
-                }
             });
 
             document.getElementById('logout-btn').addEventListener('click', function() {
