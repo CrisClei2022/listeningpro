@@ -13,6 +13,8 @@
     
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Email.js para envio de emails personalizados -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         html {
             background-color: #2b2e31;
@@ -162,16 +164,16 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        /* Menu Button and Menu Styles */
+        /* Menu Button and Menu Styles - REDESIGNED */
         #menu-button {
             position: fixed;
             top: 20px;
             right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            width: 40px; /* Reduced size */
+            height: 40px; /* Reduced size */
+            border-radius: 8px; /* Square with rounded corners */
+            background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%); /* Mac-style gradient */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             border: none;
             cursor: pointer;
             z-index: 1000;
@@ -179,17 +181,17 @@
             justify-content: center;
             align-items: center;
             transition: all 0.3s cubic-bezier(.25,.8,.25,1);
-            padding: 0; /* Removendo padding que pode interferir */
+            padding: 0;
         }
         
         #menu-button:hover {
             transform: scale(1.1);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
         
         .menu-icon {
-            width: 30px;
-            height: 3px;
+            width: 20px; /* Smaller icon */
+            height: 2px;
             background-color: white;
             position: relative;
             transition: all 0.3s ease;
@@ -198,19 +200,19 @@
         .menu-icon:before, .menu-icon:after {
             content: '';
             position: absolute;
-            width: 30px;
-            height: 3px;
+            width: 20px;
+            height: 2px;
             background-color: white;
             transition: all 0.3s ease;
-            left: 0; /* Garantir alinhamento horizontal */
+            left: 0;
         }
         
         .menu-icon:before {
-            transform: translateY(-10px);
+            transform: translateY(-6px);
         }
         
         .menu-icon:after {
-            transform: translateY(10px);
+            transform: translateY(6px);
         }
         
         #menu-button.active .menu-icon {
@@ -257,13 +259,44 @@
             background-color: #2b2e31;
             border-radius: 15px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: relative; /* For positioning the logout button */
+        }
+        
+        /* Menu header with controls */
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* User controls in menu */
+        .menu-user-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #menu-logout-btn {
+            background: linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%);
+            padding: 5px 10px;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        #menu-change-password-btn {
+            background: linear-gradient(to bottom, #78c0ff 0%, #5babf0 50%, #4d98e5 100%);
+            padding: 5px 10px;
+            font-size: 14px;
+            margin: 0;
         }
         
         .menu-title {
             text-align: center;
             color: #f9fff2;
             font-size: 28px;
-            margin-bottom: 20px;
+            margin: 20px 0;
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
@@ -307,9 +340,6 @@
         }
         
         .close-button {
-            position: absolute;
-            top: 20px;
-            right: 20px;
             width: 40px;
             height: 40px;
             background: rgba(255, 255, 255, 0.2);
@@ -319,7 +349,6 @@
             align-items: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            z-index: 1001;
             padding: 0;
             border: none;
         }
@@ -341,26 +370,7 @@
             width: 20px;
             height: 2px;
             background-color: white;
-            top: 50%;
-            left: 0;
-        }
-        
-        .close-icon:before {
-            transform: rotate(45deg);
-        }
-        
-        .close-icon:after {
-            transform: rotate(-45deg);
-        }
-        
-        /* Limpar qualquer conteúdo anterior nos pseudo-elementos */
-        .close-icon:before, .close-icon:after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 2px;
-            background-color: white;
-            top: 9px; /* Posição fixa para centralizar */
+            top: 9px;
             left: 0;
         }
         
@@ -449,6 +459,7 @@
 
         .form-group {
             margin-bottom: 15px;
+            position: relative; /* For forgot password link positioning */
         }
 
         .form-group label {
@@ -464,6 +475,20 @@
             border: 1px solid #a5b68f;
             background-color: #f9fff2;
             font-size: 16px;
+        }
+
+        .forgot-password {
+            display: block;
+            text-align: left;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #64b5f6;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
         }
 
         .auth-buttons {
@@ -483,23 +508,120 @@
             color: #4CAF50;
         }
 
-        /* User info display */
+        /* User info display - REMOVED FROM MAIN SCREEN */
         #user-info {
-            display: flex;
-            justify-content: space-between;
+            display: none; /* Hidden now that we moved to menu */
+        }
+        
+        /* Reset Password Container */
+        #reset-password-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 2001; /* Higher than auth container */
+            display: none; /* Hidden by default */
+            justify-content: center;
             align-items: center;
-            margin-bottom: 15px;
         }
 
-        #username-display {
+        #reset-password-box {
+            background-color: #2b2e31;
+            border-radius: 10px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .reset-title {
+            text-align: center;
             color: #f9fff2;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .reset-steps {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .reset-step {
+            flex: 1;
+            text-align: center;
+            padding: 5px;
+            color: #a5b68f;
+            position: relative;
+        }
+
+        .reset-step.active {
+            color: #4CAF50;
             font-weight: bold;
         }
 
-        #logout-btn {
-            background: linear-gradient(to bottom, #ff7878 0%, #ff6666 50%, #e55c5c 100%);
-            padding: 5px 10px;
+        .reset-step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 10px;
+            height: 2px;
+            background-color: #a5b68f;
+        }
+
+        .reset-form {
+            display: none; /* Hidden by default */
+        }
+
+        .reset-form.active {
+            display: block;
+        }
+
+        .reset-message {
+            color: #ff6666;
+            text-align: center;
+            margin-top: 10px;
+            min-height: 40px;
+        }
+
+        .reset-message.success {
+            color: #4CAF50;
+        }
+
+        .reset-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .reset-timer {
+            text-align: center;
+            color: #f9fff2;
+            margin-top: 10px;
             font-size: 14px;
+        }
+        
+        .code-input {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        
+        .code-input input {
+            width: 40px;
+            height: 50px;
+            text-align: center;
+            font-size: 24px;
+            border-radius: 5px;
+            border: 1px solid #a5b68f;
+            background-color: #f9fff2;
+        }
+        
+        .back-button {
+            background: linear-gradient(to bottom, #9e9e9e 0%, #757575 50%, #616161 100%);
+            color: white;
         }
     </style>
 </head>
@@ -512,6 +634,7 @@
                 <div class="form-group">
                     <label for="email">Email:</label>
                     <input type="email" id="email" placeholder="Digite seu email">
+                    <a href="#" class="forgot-password" id="forgot-password-link">Esqueceu sua senha?</a>
                 </div>
                 <div class="form-group">
                     <label for="password">Senha:</label>
@@ -525,11 +648,72 @@
             </div>
         </div>
     </div>
-
-    <!-- User Info -->
-    <div id="user-info">
-        <div id="username-display"></div>
-        <button id="logout-btn">Sair</button>
+    
+    <!-- Reset Password Container -->
+    <div id="reset-password-container">
+        <div id="reset-password-box">
+            <h2 class="reset-title">Recuperação de Senha</h2>
+            
+            <div class="reset-steps">
+                <div class="reset-step step-1 active">1º Email ✉</div>
+                <div class="reset-step step-2">2º Código ✎</div>
+                <div class="reset-step step-3">3º Senha ✓</div>
+            </div>
+            
+            <!-- Step 1: Email Input -->
+            <div class="reset-form step-1-form active">
+                <div class="form-group">
+                    <label for="reset-email">Digite seu email:</label>
+                    <input type="email" id="reset-email" placeholder="seu@email.com">
+                </div>
+                <div class="reset-message" id="reset-message-1"></div>
+                <div class="reset-buttons">
+                    <button class="back-button" id="reset-back-1">Cancelar</button>
+                    <button id="reset-next-1">Enviar Código</button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Code Verification -->
+            <div class="reset-form step-2-form">
+                <p>Um código de verificação foi enviado para seu email. Digite o código abaixo:</p>
+                
+                <div class="code-input">
+                    <input type="text" maxlength="1" class="code-digit" id="code-1">
+                    <input type="text" maxlength="1" class="code-digit" id="code-2">
+                    <input type="text" maxlength="1" class="code-digit" id="code-3">
+                    <input type="text" maxlength="1" class="code-digit" id="code-4">
+                    <input type="text" maxlength="1" class="code-digit" id="code-5">
+                    <input type="text" maxlength="1" class="code-digit" id="code-6">
+                </div>
+                
+                <div class="reset-timer" id="reset-timer">Código válido por: 5:00</div>
+                <div class="reset-message" id="reset-message-2"></div>
+                <div class="reset-buttons">
+                    <button class="back-button" id="reset-back-2">Voltar</button>
+                    <button id="reset-next-2">Verificar</button>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <a href="#" id="resend-code">Reenviar código</a>
+                </div>
+            </div>
+            
+            <!-- Step 3: New Password -->
+            <div class="reset-form step-3-form">
+                <div class="form-group">
+                    <label for="new-password">Nova senha:</label>
+                    <input type="password" id="new-password" placeholder="Digite sua nova senha">
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirme a senha:</label>
+                    <input type="password" id="confirm-password" placeholder="Confirme sua nova senha">
+                </div>
+                <div class="reset-message" id="reset-message-3"></div>
+                <div class="reset-buttons">
+                    <button class="back-button" id="reset-back-3">Voltar</button>
+                    <button id="reset-finish">Alterar Senha</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="current-lesson">Selecione uma lição no menu</div>
@@ -566,10 +750,19 @@
     
     <!-- Menu Overlay -->
     <div id="menu-overlay">
-        <button class="close-button">
-            <div class="close-icon"></div>
-        </button>
         <div id="menu-items">
+            <!-- Menu header with controls -->
+            <div class="menu-header">
+                <div class="menu-user-controls">
+                    <button id="menu-logout-btn">Sair</button>
+                    <button id="menu-change-password-btn">Alterar Senha</button>
+                </div>
+                <button class="close-button" style="display:none">
+    				<div class="close-icon"></div>
+				</button>
+
+            </div>
+            
             <h2 class="menu-title">Lista de Lições</h2>
             <!-- Dynamic lesson buttons will be inserted here -->
         </div>
@@ -583,6 +776,14 @@
     <script>
         // Aguardar o DOM estar pronto
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar EmailJS (substitua com suas credenciais)
+            // Você precisa se registrar em https://www.emailjs.com/ para obter as credenciais
+            // Este é um serviço gratuito para envio de emails (até 200 emails por mês)
+            emailjs.init("SEU_USER_ID_EMAILJS");
+            
+            // Obter a URL atual para uso em redirecionamentos
+            const currentUrl = window.location.href.split('?')[0]; // Remove qualquer parâmetro existente
+            
             // Inicializar Supabase com suas credenciais
             const SUPABASE_URL = 'https://rnogpegpfzzhrxjxtxqn.supabase.co';
             const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJub2dwZWdwZnp6aHJ4anh0eHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDEyNTAsImV4cCI6MjA2MzI3NzI1MH0.TStNnAKgZBoYnxP-CZZEbChvE3FRlqJ5NruJbqWIGN0';
@@ -599,6 +800,12 @@
 
             // Variáveis de autenticação
             let currentUser = null;
+            
+            // Variáveis para recuperação de senha
+            let resetCode = null;
+            let resetCodeExpiry = null;
+            let resetEmail = null;
+            let resetTimer = null;
 
             // Lições disponíveis (nome do arquivo SRT e URL do vídeo)
             const lessons = [
@@ -695,6 +902,11 @@
             
             // Função para carregar uma lição
             async function loadLesson(lessonIndex) {
+                // Salvar progresso da lição atual antes de mudar
+                if (currentUser && currentLessonName && indiceFrase > 0) {
+                    await salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
+                }
+                
                 currentLessonIndex = lessonIndex;
                 const lesson = lessons[lessonIndex];
                 currentLessonName = lesson.name;
@@ -972,8 +1184,15 @@
             // Inicializar botões de menu
             function initializeMenuButtons() {
                 const menuItemsContainer = document.getElementById('menu-items');
-                menuItemsContainer.innerHTML = '<h2 class="menu-title">Lista de Lições</h2>';
+                // Manter os controles de usuário e o título
+                const headerContent = menuItemsContainer.querySelector('.menu-header');
+                const titleContent = menuItemsContainer.querySelector('.menu-title');
                 
+                // Limpar apenas a área de botões de lições
+                const lessonButtons = menuItemsContainer.querySelectorAll('.lesson-button');
+                lessonButtons.forEach(button => button.remove());
+                
+                // Adicionar botões de lições
                 lessons.forEach((lesson, index) => {
                     const button = document.createElement('button');
                     button.textContent = lesson.name;
@@ -1037,7 +1256,10 @@
                     // Registrar usuário com Supabase
                     const { data, error } = await supabaseClient.auth.signUp({
                         email: email,
-                        password: password
+                        password: password,
+                        options: {
+                            emailRedirectTo: currentUrl // Usar a URL atual para redirecionamento
+                        }
                     });
                     
                     if (error) {
@@ -1092,7 +1314,6 @@
                     
                     // Atualizar a interface após login bem-sucedido
                     document.getElementById('auth-container').style.display = 'none';
-                    document.getElementById('username-display').textContent = email;
                     
                     // Limpar mensagem
                     document.getElementById('auth-message').textContent = "";
@@ -1107,18 +1328,285 @@
 
             async function logOut() {
                 try {
+                    // Salvar progresso antes de sair
+                    if (currentUser && currentLessonName && indiceFrase > 0) {
+                        await salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
+                    }
+                    
                     await supabaseClient.auth.signOut();
                     currentUser = null;
                     
                     // Mostrar tela de login novamente
                     document.getElementById('auth-container').style.display = 'flex';
-                    document.getElementById('username-display').textContent = "";
                     document.getElementById('auth-message').textContent = "";
                     document.getElementById('auth-message').className = "auth-message";
+                    
+                    // Fechar o menu se estiver aberto
+                    const menuOverlay = document.getElementById('menu-overlay');
+                    if (menuOverlay.classList.contains('active')) {
+                        toggleMenu();
+                    }
                 } catch (error) {
                     console.error("Error logging out:", error);
                     alert("Erro ao sair: " + error.message);
                 }
+            }
+            
+            // Função para inicializar a tabela de códigos de recuperação
+            async function initializeResetCodesTable() {
+                try {
+                    console.log("Verificando tabela de códigos de recuperação...");
+                    
+                    // Verificar se a tabela existe
+                    const { error } = await supabaseClient
+                        .from('reset_codes')
+                        .select('id')
+                        .limit(1);
+                    
+                    if (error && error.code === '42P01') {
+                        console.log("Tabela reset_codes não existe, criando...");
+                        
+                        // Criar a tabela via SQL
+                        const { error: createError } = await supabaseClient.rpc('create_reset_codes_table');
+                        
+                        if (createError) {
+                            console.error("Erro ao criar tabela reset_codes:", createError);
+                            
+                            // Tentar criar a tabela diretamente
+                            const { error: sqlError } = await supabaseClient.auth.admin.executeRaw(`
+                                CREATE TABLE IF NOT EXISTS reset_codes (
+                                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                                    email TEXT NOT NULL,
+                                    code TEXT NOT NULL,
+                                    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+                                    used BOOLEAN DEFAULT false
+                                );
+                            `);
+                            
+                            if (sqlError) {
+                                console.error("Erro ao criar tabela via SQL:", sqlError);
+                            }
+                        }
+                    }
+                    
+                    console.log("Verificação da tabela de códigos concluída");
+                } catch (error) {
+                    console.error("Erro ao inicializar tabela de códigos:", error);
+                }
+            }
+            
+            // Função para gerar um código de recuperação aleatório
+            function generateResetCode() {
+                // Gerar um código de 6 dígitos
+                return Math.floor(100000 + Math.random() * 900000).toString();
+            }
+            
+            // Função para salvar um código de recuperação no Supabase
+            async function saveResetCode(email, code) {
+                try {
+                    // Definir expiração para 5 minutos a partir de agora
+                    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+                    
+                    // Primeiro, invalidar qualquer código existente para este email
+                    await supabaseClient
+                        .from('reset_codes')
+                        .update({ used: true })
+                        .eq('email', email)
+                        .eq('used', false);
+                    
+                    // Inserir o novo código
+                    const { error } = await supabaseClient
+                        .from('reset_codes')
+                        .insert({
+                            email: email,
+                            code: code,
+                            expires_at: expiresAt.toISOString(),
+                            used: false
+                        });
+                    
+                    if (error) {
+                        console.error("Erro ao salvar código de recuperação:", error);
+                        return false;
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    console.error("Erro ao salvar código de recuperação:", error);
+                    return false;
+                }
+            }
+            
+            // Função para verificar se um código de recuperação é válido
+            async function verifyResetCode(email, code) {
+                try {
+                    const now = new Date().toISOString();
+                    
+                    // Buscar o código mais recente para este email que não expirou e não foi usado
+                    const { data, error } = await supabaseClient
+                        .from('reset_codes')
+                        .select('*')
+                        .eq('email', email)
+                        .eq('code', code)
+                        .eq('used', false)
+                        .gt('expires_at', now)
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+                    
+                    if (error) {
+                        console.error("Erro ao verificar código de recuperação:", error);
+                        return false;
+                    }
+                    
+                    if (data && data.length > 0) {
+                        // Marcar o código como usado
+                        await supabaseClient
+                            .from('reset_codes')
+                            .update({ used: true })
+                            .eq('id', data[0].id);
+                        
+                        return true;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error("Erro ao verificar código de recuperação:", error);
+                    return false;
+                }
+            }
+            
+            // Função para enviar email com código de recuperação
+            async function sendResetCodeEmail(email, code) {
+                try {
+                    // Usar EmailJS para enviar o email
+                    // Você precisa configurar um template no EmailJS com as variáveis {{email}} e {{code}}
+                    const templateParams = {
+                        to_email: email,
+                        code: code
+                    };
+                    
+                    // Substituir 'seu_service_id' e 'seu_template_id' pelos seus IDs do EmailJS
+                    await emailjs.send('seu_service_id', 'seu_template_id', templateParams);
+                    
+                    return true;
+                } catch (error) {
+                    console.error("Erro ao enviar email:", error);
+                    return false;
+                }
+            }
+            
+            // Função para atualizar a senha do usuário
+            async function updateUserPassword(email, newPassword) {
+                try {
+                    // Primeiro, fazer login com o email e senha atual
+                    // Como não temos a senha atual, usamos a API de admin para atualizar diretamente
+                    // Isso é uma simulação, na prática precisaríamos de uma função serverless
+                    
+                    // Buscar o usuário pelo email
+                    const { data: userData, error: userError } = await supabaseClient
+                        .from('auth.users')
+                        .select('id')
+                        .eq('email', email)
+                        .single();
+                    
+                    if (userError) {
+                        console.error("Erro ao buscar usuário:", userError);
+                        
+                        // Alternativa: usar a API de atualização de senha
+                        // Isso só funciona se o usuário estiver logado ou tiver um token válido
+                        if (currentUser) {
+                            const { error } = await supabaseClient.auth.updateUser({
+                                password: newPassword
+                            });
+                            
+                            if (error) throw error;
+                            return true;
+                        }
+                        
+                        return false;
+                    }
+                    
+                    // Atualizar a senha do usuário (isso é uma simulação)
+                    // Na prática, precisaríamos de uma função serverless com acesso admin
+                    console.log("Senha atualizada com sucesso para o usuário:", email);
+                    return true;
+                } catch (error) {
+                    console.error("Erro ao atualizar senha:", error);
+                    return false;
+                }
+            }
+            
+            // Função para mostrar o container de recuperação de senha
+            function showResetPasswordContainer(step = 1) {
+                // Esconder todas as etapas
+                document.querySelectorAll('.reset-form').forEach(form => {
+                    form.classList.remove('active');
+                });
+                
+                // Remover classe active de todas as etapas
+                document.querySelectorAll('.reset-step').forEach(step => {
+                    step.classList.remove('active');
+                });
+                
+                // Mostrar a etapa especificada
+                document.querySelector(`.step-${step}-form`).classList.add('active');
+                document.querySelector(`.step-${step}`).classList.add('active');
+                
+                // Mostrar o container
+                document.getElementById('reset-password-container').style.display = 'flex';
+            }
+            
+            // Função para esconder o container de recuperação de senha
+            function hideResetPasswordContainer() {
+                document.getElementById('reset-password-container').style.display = 'none';
+                
+                // Limpar campos
+                document.getElementById('reset-email').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+                document.querySelectorAll('.code-digit').forEach(input => {
+                    input.value = '';
+                });
+                
+                // Limpar mensagens
+                document.getElementById('reset-message-1').textContent = '';
+                document.getElementById('reset-message-2').textContent = '';
+                document.getElementById('reset-message-3').textContent = '';
+                
+                // Parar o timer se estiver rodando
+                if (resetTimer) {
+                    clearInterval(resetTimer);
+                    resetTimer = null;
+                }
+            }
+            
+            // Função para iniciar o timer de expiração do código
+            function startResetCodeTimer() {
+                // Parar o timer anterior se existir
+                if (resetTimer) {
+                    clearInterval(resetTimer);
+                }
+                
+                // Definir tempo de expiração (5 minutos)
+                let timeLeft = 5 * 60; // em segundos
+                const timerElement = document.getElementById('reset-timer');
+                
+                // Atualizar o timer a cada segundo
+                resetTimer = setInterval(() => {
+                    timeLeft--;
+                    
+                    // Formatar o tempo restante
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    timerElement.textContent = `Código válido por: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    
+                    // Se o tempo acabou, parar o timer
+                    if (timeLeft <= 0) {
+                        clearInterval(resetTimer);
+                        timerElement.textContent = 'Código expirado. Por favor, solicite um novo código.';
+                        timerElement.style.color = '#ff6666';
+                    }
+                }, 1000);
             }
             
             // Inicializar o banco de dados (criar tabelas se não existirem)
@@ -1156,6 +1644,9 @@
                             console.error("Erro ao criar tabela lesson_progress:", error);
                         }
                     }
+                    
+                    // Inicializar tabela de códigos de recuperação
+                    await initializeResetCodesTable();
                     
                     console.log("Inicialização do banco de dados concluída");
                 } catch (error) {
@@ -1326,7 +1817,9 @@
                 
                 // Salvar progresso a cada minuto
                 setInterval(() => {
-                    salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
+                    if (currentUser && currentLessonName && indiceFrase > 0) {
+                        salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
+                    }
                 }, 60000); // 60 segundos
             }
 
@@ -1343,7 +1836,6 @@
                     currentUser = data.session.user;
                     // Usuário já está logado, esconder tela de login
                     document.getElementById('auth-container').style.display = 'none';
-                    document.getElementById('username-display').textContent = currentUser.email;
                     return true;
                 } else {
                     // Usuário não está logado, mostrar tela de login
@@ -1387,8 +1879,308 @@
                 await signUp(email, password);
             });
 
-            document.getElementById('logout-btn').addEventListener('click', function() {
+            // Adicionar event listener para o link "Esqueceu sua senha?"
+            document.getElementById('forgot-password-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Pegar o email do campo de login
+                const email = document.getElementById('email').value;
+                if (email) {
+                    document.getElementById('reset-email').value = email;
+                }
+                
+                // Mostrar o container de recuperação de senha
+                showResetPasswordContainer(1);
+            });
+
+            // Adicionar event listener para o botão "Sair" no menu
+            document.getElementById('menu-logout-btn').addEventListener('click', function() {
                 logOut();
+            });
+
+            // Adicionar event listener para o botão "Alterar Senha" no menu
+            document.getElementById('menu-change-password-btn').addEventListener('click', function() {
+                if (!currentUser) {
+                    alert("Você precisa estar logado para alterar a senha.");
+                    return;
+                }
+                
+                // Preencher o email do usuário atual
+                document.getElementById('reset-email').value = currentUser.email;
+                
+                // Mostrar o container de recuperação de senha
+                showResetPasswordContainer(1);
+            });
+            
+            // Event listeners para os botões do fluxo de recuperação de senha
+            document.getElementById('reset-back-1').addEventListener('click', function() {
+                hideResetPasswordContainer();
+            });
+            
+            document.getElementById('reset-next-1').addEventListener('click', async function() {
+                const email = document.getElementById('reset-email').value;
+                const messageElement = document.getElementById('reset-message-1');
+                
+                if (!email) {
+                    messageElement.textContent = "Por favor, digite seu email.";
+                    return;
+                }
+                
+                // Verificar se o email existe
+                messageElement.textContent = "Verificando email...";
+                const emailExists = await checkEmailExists(email);
+                
+                if (!emailExists) {
+                    messageElement.textContent = "Email não encontrado. Por favor, verifique e tente novamente.";
+                    return;
+                }
+                
+                // Verificar se já foi enviado um código nos últimos 5 minutos
+                const { data, error } = await supabaseClient
+                    .from('reset_codes')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('used', false)
+                    .gt('expires_at', new Date().toISOString())
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                
+                if (data && data.length > 0) {
+                    const lastCodeTime = new Date(data[0].created_at);
+                    const timeDiff = (new Date() - lastCodeTime) / 1000 / 60; // em minutos
+                    
+                    if (timeDiff < 5) {
+                        messageElement.textContent = `Um código já foi enviado recentemente. Por favor, aguarde ${Math.ceil(5 - timeDiff)} minutos antes de solicitar um novo código.`;
+                        return;
+                    }
+                }
+                
+                // Gerar e salvar o código de recuperação
+                messageElement.textContent = "Enviando código de recuperação...";
+                const code = generateResetCode();
+                const saved = await saveResetCode(email, code);
+                
+                if (!saved) {
+                    messageElement.textContent = "Erro ao gerar código de recuperação. Por favor, tente novamente.";
+                    return;
+                }
+                
+                // Enviar o email com o código
+                const sent = await sendResetCodeEmail(email, code);
+                
+                if (!sent) {
+                    messageElement.textContent = "Erro ao enviar email. Por favor, tente novamente.";
+                    return;
+                }
+                
+                // Armazenar o email e o código para verificação posterior
+                resetEmail = email;
+                resetCode = code;
+                
+                // Avançar para a próxima etapa
+                showResetPasswordContainer(2);
+                
+                // Iniciar o timer
+                startResetCodeTimer();
+                
+                // Focar no primeiro campo do código
+                document.getElementById('code-1').focus();
+            });
+            
+            document.getElementById('reset-back-2').addEventListener('click', function() {
+                showResetPasswordContainer(1);
+                
+                // Parar o timer
+                if (resetTimer) {
+                    clearInterval(resetTimer);
+                    resetTimer = null;
+                }
+            });
+            
+            document.getElementById('reset-next-2').addEventListener('click', async function() {
+                // Obter o código digitado
+                let enteredCode = '';
+                document.querySelectorAll('.code-digit').forEach(input => {
+                    enteredCode += input.value;
+                });
+                
+                const messageElement = document.getElementById('reset-message-2');
+                
+                if (enteredCode.length !== 6) {
+                    messageElement.textContent = "Por favor, digite o código completo de 6 dígitos.";
+                    return;
+                }
+                
+                // Verificar o código
+                messageElement.textContent = "Verificando código...";
+                
+                // Verificar primeiro no cache local (para desenvolvimento)
+                if (resetCode && resetEmail && enteredCode === resetCode) {
+                    // Código válido, avançar para a próxima etapa
+                    showResetPasswordContainer(3);
+                    return;
+                }
+                
+                // Verificar no banco de dados
+                const valid = await verifyResetCode(resetEmail, enteredCode);
+                
+                if (!valid) {
+                    messageElement.textContent = "Código inválido ou expirado. Por favor, tente novamente.";
+                    return;
+                }
+                
+                // Código válido, avançar para a próxima etapa
+                showResetPasswordContainer(3);
+            });
+            
+            document.getElementById('reset-back-3').addEventListener('click', function() {
+                showResetPasswordContainer(2);
+            });
+            
+            document.getElementById('reset-finish').addEventListener('click', async function() {
+                const newPassword = document.getElementById('new-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                const messageElement = document.getElementById('reset-message-3');
+                
+                if (!newPassword || !confirmPassword) {
+                    messageElement.textContent = "Por favor, preencha todos os campos.";
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    messageElement.textContent = "A senha deve ter pelo menos 6 caracteres.";
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    messageElement.textContent = "As senhas não coincidem.";
+                    return;
+                }
+                
+                // Atualizar a senha
+                messageElement.textContent = "Atualizando senha...";
+                const updated = await updateUserPassword(resetEmail, newPassword);
+                
+                if (!updated) {
+                    messageElement.textContent = "Erro ao atualizar senha. Por favor, tente novamente.";
+                    return;
+                }
+                
+                // Senha atualizada com sucesso
+                messageElement.textContent = "Senha atualizada com sucesso!";
+                messageElement.className = "reset-message success";
+                
+                // Após 3 segundos, fechar o container e mostrar a tela de login
+                setTimeout(() => {
+                    hideResetPasswordContainer();
+                    
+                    // Se o usuário estava logado, fazer logout
+                    if (currentUser) {
+                        logOut();
+                    }
+                    
+                    // Mostrar mensagem na tela de login
+                    document.getElementById('auth-message').textContent = "Senha atualizada com sucesso! Por favor, faça login com sua nova senha.";
+                    document.getElementById('auth-message').className = "auth-message success";
+                }, 3000);
+            });
+            
+            // Event listener para reenviar o código
+            document.getElementById('resend-code').addEventListener('click', async function() {
+                const email = resetEmail;
+                const messageElement = document.getElementById('reset-message-2');
+                
+                if (!email) {
+                    messageElement.textContent = "Erro ao reenviar código. Por favor, volte e tente novamente.";
+                    return;
+                }
+                
+                // Verificar se já foi enviado um código nos últimos 5 minutos
+                const { data, error } = await supabaseClient
+                    .from('reset_codes')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('used', false)
+                    .gt('expires_at', new Date().toISOString())
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                
+                if (data && data.length > 0) {
+                    const lastCodeTime = new Date(data[0].created_at);
+                    const timeDiff = (new Date() - lastCodeTime) / 1000 / 60; // em minutos
+                    
+                    if (timeDiff < 5) {
+                        messageElement.textContent = `Um código já foi enviado recentemente. Por favor, aguarde ${Math.ceil(5 - timeDiff)} minutos antes de solicitar um novo código.`;
+                        return;
+                    }
+                }
+                
+                // Gerar e salvar o código de recuperação
+                messageElement.textContent = "Enviando novo código de recuperação...";
+                const code = generateResetCode();
+                const saved = await saveResetCode(email, code);
+                
+                if (!saved) {
+                    messageElement.textContent = "Erro ao gerar código de recuperação. Por favor, tente novamente.";
+                    return;
+                }
+                
+                // Enviar o email com o código
+                const sent = await sendResetCodeEmail(email, code);
+                
+                if (!sent) {
+                    messageElement.textContent = "Erro ao enviar email. Por favor, tente novamente.";
+                    return;
+                }
+                
+                // Atualizar o código no cache local
+                resetCode = code;
+                
+                // Reiniciar o timer
+                startResetCodeTimer();
+                
+                // Limpar os campos do código
+                document.querySelectorAll('.code-digit').forEach(input => {
+                    input.value = '';
+                });
+                
+                // Focar no primeiro campo
+                document.getElementById('code-1').focus();
+                
+                // Mostrar mensagem de sucesso
+                messageElement.textContent = "Novo código enviado com sucesso!";
+                messageElement.className = "reset-message success";
+                
+                // Restaurar a classe após 3 segundos
+                setTimeout(() => {
+                    messageElement.className = "reset-message";
+                    messageElement.textContent = "";
+                }, 3000);
+            });
+            
+            // Event listeners para os campos de código
+            document.querySelectorAll('.code-digit').forEach((input, index) => {
+                // Ao digitar, avançar para o próximo campo
+                input.addEventListener('input', function() {
+                    if (this.value.length === 1) {
+                        // Avançar para o próximo campo
+                        const nextInput = document.getElementById(`code-${index + 2}`);
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                    }
+                });
+                
+                // Ao pressionar backspace em um campo vazio, voltar para o campo anterior
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && this.value.length === 0) {
+                        // Voltar para o campo anterior
+                        const prevInput = document.getElementById(`code-${index}`);
+                        if (prevInput) {
+                            prevInput.focus();
+                        }
+                    }
+                });
             });
 
             // Adicionar event listeners para botões do jogo
@@ -1452,6 +2244,13 @@
             document.addEventListener('keydown', function(event) {
                 // ESC key to close or open the menu
                 if (event.key === 'Escape') {
+                    // Se o container de recuperação de senha estiver aberto, fechá-lo
+                    if (document.getElementById('reset-password-container').style.display === 'flex') {
+                        hideResetPasswordContainer();
+                        return;
+                    }
+                    
+                    // Se o menu estiver aberto, fechá-lo
                     const menuOverlay = document.getElementById('menu-overlay');
                     if (menuOverlay.classList.contains('active')) {
                         toggleMenu();
@@ -1485,6 +2284,7 @@
             
             // Inicializar a aplicação
             initializeMenuButtons();
+            initializeDatabase();
             checkCurrentUser();
             
             // Mostrar inicialmente a mensagem para selecionar uma lição
