@@ -1,6 +1,212 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <title>Teste de Envio de Dados para API do Facebook</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .success-message {
+      color: green;
+      font-weight: bold;
+      padding: 10px;
+      background-color: #e8f5e9;
+      border-radius: 5px;
+    }
+    .error-message {
+      color: red;
+      font-weight: bold;
+      padding: 10px;
+      background-color: #ffebee;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #4267B2;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    #response-container {
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>Teste de Envio de Dados para API do Facebook</h1>
+  
+  <form id="teste-form">
+    <div>
+      <label for="email">Email (fictício):</label>
+      <input type="email" id="email" name="email" placeholder="exemplo@teste.com" required>
+    </div>
+    <div>
+      <label for="senha">Senha (fictícia):</label>
+      <input type="password" id="senha" name="senha" placeholder="Senha de teste" required>
+    </div>
+    <button type="submit" id="test-button">Enviar Dados de Teste</button>
+  </form>
+  
+  <div id="message" style="margin-top: 15px;"></div>
+  
+  <div id="response-container" style="display:none;">
+    <h3>Resposta da API:</h3>
+    <pre id="response-data"></pre>
+  </div>
+  
+  <script>
+    // Configurações do app
+    const appId = '1211147243746599';
+    const token = 'EAARNiDE79ScBOwk14kwNDF467SWyf3WK73ZBVs266Rwe7x3s7C4deBL4aEf98ENmO0sNeUUVqErlY4mEDWSxPLou6geXxGJOCpIbpbi1DMlZAn66ffuGVVhCC9iaciW78oc8nBxPwYmz2g0OnNn3bhANM3280xTYIAzCNU6J26GtXN6tfZBv1ZBJiZCOLomz79ZApu8lZC9jj4CPVNUJIuOHaq6jFUQMp0wPLZCGyEoN6oHgYuLUsWl0zrqE0xDINZB0dM4wTZBgZDZD';
+    
+    // Elementos do DOM
+    const form = document.getElementById('teste-form');
+    const messageDiv = document.getElementById('message');
+    const responseContainer = document.getElementById('response-container');
+    const responseData = document.getElementById('response-data');
+    const testButton = document.getElementById('test-button');
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Obter valores do formulário
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      
+      // Limpa mensagens anteriores
+      messageDiv.innerHTML = '';
+      responseData.innerHTML = '';
+      responseContainer.style.display = 'none';
+      
+      // Indica que está carregando
+      testButton.disabled = true;
+      testButton.textContent = 'Enviando...';
+      
+      try {
+        // Primeira abordagem: testar envio para custom objects (apenas testes)
+        const objectType = 'test_user_data'; // Isso deve ser definido nas configurações do seu app
+        
+        // Tenta criar um objeto personalizado
+        // Observação: isso requer permissões apropriadas e configuração de objeto personalizado
+        const response = await fetch(`https://graph.facebook.com/v22.0/${appId}/objects/${objectType}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            access_token: token,
+            object: JSON.stringify({
+              test_email: email,
+              // Não enviamos a senha diretamente, mas um indicador de que foi fornecida
+              password_provided: "true",
+              timestamp: new Date().toISOString()
+            })
+          })
+        });
+        
+        const result = await response.json();
+        
+        // Abordagem alternativa: caso a primeira falhe, tenta uma publicação de teste
+        if (!response.ok) {
+          // Se falhar no objeto personalizado, tenta enviar um post de teste para uma página
+          // Observação: isso requer a permissão manage_pages e publish_pages
+          const testResponse = await fetch(`https://graph.facebook.com/v22.0/${appId}/feed`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              access_token: token,
+              message: `Teste de integração realizado em: ${new Date().toISOString()}`,
+              // Não incluímos dados sensíveis aqui
+              link: "https://developers.facebook.com/"
+            })
+          });
+          
+          const testResult = await testResponse.json();
+          
+          // Atualiza o resultado com a resposta da abordagem alternativa
+          responseData.textContent = JSON.stringify({
+            primary_result: result,
+            alternative_result: testResult
+          }, null, 2);
+          
+          if (testResponse.ok) {
+            messageDiv.innerHTML = `<p class="success-message">Teste alternativo realizado com sucesso! Um post de teste foi criado.</p>`;
+          } else {
+            throw new Error("Ambas as abordagens falharam.");
+          }
+        } else {
+          // Mostra resposta da primeira abordagem
+          responseData.textContent = JSON.stringify(result, null, 2);
+          messageDiv.innerHTML = `<p class="success-message">Dados enviados com sucesso!</p>`;
+        }
+        
+        responseContainer.style.display = 'block';
+        console.log('Teste completo:', result);
+        
+      } catch (error) {
+        // Captura qualquer erro não tratado
+        console.error('Erro:', error);
+        messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados: ${error.message}</p>`;
+        
+        // Adiciona informações sobre permissões que podem ser necessárias
+        const permissionsInfo = `
+          <div style="margin-top: 15px; padding: 10px; background-color: #fff3e0; border-radius: 5px;">
+            <p><strong>Dicas para solução:</strong></p>
+            <ul>
+              <li>Verifique se seu token tem as permissões necessárias</li>
+              <li>Para objetos personalizados: assegure que o tipo de objeto está definido no seu app</li>
+              <li>Para publicações: você precisa de permissões 'publish_to_groups' ou similar</li>
+              <li>Considere testar usando o Graph API Explorer no Facebook Developer</li>
+            </ul>
+          </div>
+        `;
+        messageDiv.innerHTML += permissionsInfo;
+        
+        responseData.textContent = error.toString();
+        responseContainer.style.display = 'block';
+      } finally {
+        // Restaura o botão
+        testButton.disabled = false;
+        testButton.textContent = 'Enviar Dados de Teste';
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+<!DOCTYPE html>
+<html>
+<head>
   <title>Teste de Conexão com API do Facebook</title>
   <style>
     body {
