@@ -13,8 +13,6 @@
     
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Email.js para envio de emails personalizados -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         html {
             background-color: #2b2e31;
@@ -759,8 +757,7 @@
                 </div>
                 <button class="close-button" style="display:none">
     				<div class="close-icon"></div>
-				</button>
-
+                </button>
             </div>
             
             <h2 class="menu-title">Lista de Lições</h2>
@@ -776,11 +773,6 @@
     <script>
         // Aguardar o DOM estar pronto
         document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar EmailJS (substitua com suas credenciais)
-            // Você precisa se registrar em https://www.emailjs.com/ para obter as credenciais
-            // Este é um serviço gratuito para envio de emails (até 200 emails por mês)
-            emailjs.init("SEU_USER_ID_EMAILJS");
-            
             // Obter a URL atual para uso em redirecionamentos
             const currentUrl = window.location.href.split('?')[0]; // Remove qualquer parâmetro existente
             
@@ -1352,50 +1344,6 @@
                 }
             }
             
-            // Função para inicializar a tabela de códigos de recuperação
-            async function initializeResetCodesTable() {
-                try {
-                    console.log("Verificando tabela de códigos de recuperação...");
-                    
-                    // Verificar se a tabela existe
-                    const { error } = await supabaseClient
-                        .from('reset_codes')
-                        .select('id')
-                        .limit(1);
-                    
-                    if (error && error.code === '42P01') {
-                        console.log("Tabela reset_codes não existe, criando...");
-                        
-                        // Criar a tabela via SQL
-                        const { error: createError } = await supabaseClient.rpc('create_reset_codes_table');
-                        
-                        if (createError) {
-                            console.error("Erro ao criar tabela reset_codes:", createError);
-                            
-                            // Tentar criar a tabela diretamente
-                            const { error: sqlError } = await supabaseClient.auth.admin.executeRaw(`
-                                CREATE TABLE IF NOT EXISTS reset_codes (
-                                    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                                    email TEXT NOT NULL,
-                                    code TEXT NOT NULL,
-                                    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-                                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-                                    used BOOLEAN DEFAULT false
-                                );
-                            `);
-                            
-                            if (sqlError) {
-                                console.error("Erro ao criar tabela via SQL:", sqlError);
-                            }
-                        }
-                    }
-                    
-                    console.log("Verificação da tabela de códigos concluída");
-                } catch (error) {
-                    console.error("Erro ao inicializar tabela de códigos:", error);
-                }
-            }
-            
             // Função para gerar um código de recuperação aleatório
             function generateResetCode() {
                 // Gerar um código de 6 dígitos
@@ -1475,59 +1423,19 @@
                 }
             }
             
-            // Função para enviar email com código de recuperação
-            async function sendResetCodeEmail(email, code) {
-                try {
-                    // Usar EmailJS para enviar o email
-                    // Você precisa configurar um template no EmailJS com as variáveis {{email}} e {{code}}
-                    const templateParams = {
-                        to_email: email,
-                        code: code
-                    };
-                    
-                    // Substituir 'seu_service_id' e 'seu_template_id' pelos seus IDs do EmailJS
-                    await emailjs.send('seu_service_id', 'seu_template_id', templateParams);
-                    
-                    return true;
-                } catch (error) {
-                    console.error("Erro ao enviar email:", error);
-                    return false;
-                }
-            }
-            
             // Função para atualizar a senha do usuário
             async function updateUserPassword(email, newPassword) {
                 try {
-                    // Primeiro, fazer login com o email e senha atual
-                    // Como não temos a senha atual, usamos a API de admin para atualizar diretamente
-                    // Isso é uma simulação, na prática precisaríamos de uma função serverless
+                    // Usar a API de redefinição de senha do Supabase
+                    const { error } = await supabaseClient.auth.updateUser({
+                        password: newPassword
+                    });
                     
-                    // Buscar o usuário pelo email
-                    const { data: userData, error: userError } = await supabaseClient
-                        .from('auth.users')
-                        .select('id')
-                        .eq('email', email)
-                        .single();
-                    
-                    if (userError) {
-                        console.error("Erro ao buscar usuário:", userError);
-                        
-                        // Alternativa: usar a API de atualização de senha
-                        // Isso só funciona se o usuário estiver logado ou tiver um token válido
-                        if (currentUser) {
-                            const { error } = await supabaseClient.auth.updateUser({
-                                password: newPassword
-                            });
-                            
-                            if (error) throw error;
-                            return true;
-                        }
-                        
+                    if (error) {
+                        console.error("Erro ao atualizar senha:", error);
                         return false;
                     }
                     
-                    // Atualizar a senha do usuário (isso é uma simulação)
-                    // Na prática, precisaríamos de uma função serverless com acesso admin
                     console.log("Senha atualizada com sucesso para o usuário:", email);
                     return true;
                 } catch (error) {
@@ -1607,51 +1515,6 @@
                         timerElement.style.color = '#ff6666';
                     }
                 }, 1000);
-            }
-            
-            // Inicializar o banco de dados (criar tabelas se não existirem)
-            async function initializeDatabase() {
-                try {
-                    console.log("Inicializando banco de dados...");
-                    
-                    // Verificar se as tabelas existem e criar se necessário
-                    // Tabela para preferências do usuário
-                    const { error: prefError } = await supabaseClient
-                        .from('user_preferences')
-                        .select('id')
-                        .limit(1);
-                    
-                    if (prefError && prefError.code === '42P01') {
-                        console.log("Tabela user_preferences não existe, criando...");
-                        // Tabela não existe, criar via SQL
-                        const { error } = await supabaseClient.rpc('create_user_preferences_table');
-                        if (error) {
-                            console.error("Erro ao criar tabela user_preferences:", error);
-                        }
-                    }
-                    
-                    // Tabela para progresso das lições
-                    const { error: progError } = await supabaseClient
-                        .from('lesson_progress')
-                        .select('id')
-                        .limit(1);
-                    
-                    if (progError && progError.code === '42P01') {
-                        console.log("Tabela lesson_progress não existe, criando...");
-                        // Tabela não existe, criar via SQL
-                        const { error } = await supabaseClient.rpc('create_lesson_progress_table');
-                        if (error) {
-                            console.error("Erro ao criar tabela lesson_progress:", error);
-                        }
-                    }
-                    
-                    // Inicializar tabela de códigos de recuperação
-                    await initializeResetCodesTable();
-                    
-                    console.log("Inicialização do banco de dados concluída");
-                } catch (error) {
-                    console.error("Error initializing database:", error);
-                }
             }
             
             // Função para salvar a última lição acessada no Supabase
@@ -1965,13 +1828,10 @@
                     return;
                 }
                 
-                // Enviar o email com o código
-                const sent = await sendResetCodeEmail(email, code);
-                
-                if (!sent) {
-                    messageElement.textContent = "Erro ao enviar email. Por favor, tente novamente.";
-                    return;
-                }
+                // Para fins de demonstração, mostrar o código na tela
+                // Em produção, este código seria enviado por email
+                messageElement.textContent = `Código de recuperação enviado! (Para demonstração, o código é: ${code})`;
+                messageElement.className = "reset-message success";
                 
                 // Armazenar o email e o código para verificação posterior
                 resetEmail = email;
@@ -2125,13 +1985,10 @@
                     return;
                 }
                 
-                // Enviar o email com o código
-                const sent = await sendResetCodeEmail(email, code);
-                
-                if (!sent) {
-                    messageElement.textContent = "Erro ao enviar email. Por favor, tente novamente.";
-                    return;
-                }
+                // Para fins de demonstração, mostrar o código na tela
+                // Em produção, este código seria enviado por email
+                messageElement.textContent = `Novo código enviado! (Para demonstração, o código é: ${code})`;
+                messageElement.className = "reset-message success";
                 
                 // Atualizar o código no cache local
                 resetCode = code;
@@ -2146,10 +2003,6 @@
                 
                 // Focar no primeiro campo
                 document.getElementById('code-1').focus();
-                
-                // Mostrar mensagem de sucesso
-                messageElement.textContent = "Novo código enviado com sucesso!";
-                messageElement.className = "reset-message success";
                 
                 // Restaurar a classe após 3 segundos
                 setTimeout(() => {
@@ -2284,7 +2137,6 @@
             
             // Inicializar a aplicação
             initializeMenuButtons();
-            initializeDatabase();
             checkCurrentUser();
             
             // Mostrar inicialmente a mensagem para selecionar uma lição
