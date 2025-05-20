@@ -577,803 +577,822 @@
     </div>
     
     <script>
-        // Inicializar Supabase com suas credenciais
-        const SUPABASE_URL = 'https://rnogpegpfzzhrxjxtxqn.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJub2dwZWdwZnp6aHJ4anh0eHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDEyNTAsImV4cCI6MjA2MzI3NzI1MH0.TStNnAKgZBoYnxP-CZZEbChvE3FRlqJ5NruJbqWIGN0';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // Variáveis de autenticação
-        let currentUser = null;
-
-        // Lições disponíveis (nome do arquivo SRT e URL do vídeo)
-        const lessons = [
-            { 
-                name: "Lady Gaga - Scheiße",
-                srtFile: "Lady Gaga - Scheiße.srt",
-                videoUrl: "https://files.catbox.moe/noor8m.mp4"
-            },
-            { 
-                name: "Melanie Martinez - The Contortionist",
-                srtFile: "Melanie Martinez - The Contortionist.srt",
-                videoUrl: "https://files.catbox.moe/vxoldg.mp4" 
-            },
-            { 
-                name: "New West - Those Eyes",
-                srtFile: "New West - Those Eyes.srt",
-                videoUrl: "https://files.catbox.moe/k7xhth.mp4" 
+        // Aguardar o DOM estar pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar Supabase com suas credenciais
+            const SUPABASE_URL = 'https://rnogpegpfzzhrxjxtxqn.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJub2dwZWdwZnp6aHJ4anh0eHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDEyNTAsImV4cCI6MjA2MzI3NzI1MH0.TStNnAKgZBoYnxP-CZZEbChvE3FRlqJ5NruJbqWIGN0';
+            
+            // Verificar se o objeto Supabase está disponível
+            if (typeof supabase === 'undefined') {
+                console.error('Erro: Biblioteca Supabase não carregada corretamente');
+                document.getElementById('auth-message').textContent = 'Erro ao carregar a biblioteca Supabase. Recarregue a página.';
+                return;
             }
-            // Adicione mais lições conforme necessário
-        ];
-        
-        // Variáveis globais
-        let videoElement = document.getElementById('custom-video');
-        let frases = [];
-        let indiceFrase = 0;
-        let fraseAtual = null;
-        let palavrasEmbaralhadas = [];
-        let palavrasClicadas = [];
-        let palavraElementos = {};
-        let progresso = 0;
-        let acertos = 0;
-        let playerReady = false;
-        let monitorTempoId;
-        let fraseAcertada = false;
-        let audioPlaying = false;
-        let currentLessonName = "";
-        let currentLessonIndex = -1;
-        
-        // Função para gerar o URL do CDN do jsDelivr para os arquivos SRT
-        function getSrtCdnUrl(filename) {
-            // URL base do jsDelivr para o seu repositório
-            const baseUrl = "https://cdn.jsdelivr.net/gh/CrisClei2022/listeningpro@main/";
-            // Retorna a URL completa
-            return baseUrl + encodeURIComponent(filename);
-        }
-        
-        // Função para carregar o arquivo SRT de uma URL
-        async function loadSrtFromUrl(url) {
-            try {
-                showLoading(true);
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Failed to load SRT: ${response.status}`);
+            
+            // Criar cliente Supabase
+            const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            // Variáveis de autenticação
+            let currentUser = null;
+
+            // Lições disponíveis (nome do arquivo SRT e URL do vídeo)
+            const lessons = [
+                { 
+                    name: "Lady Gaga - Scheiße",
+                    srtFile: "Lady Gaga - Scheiße.srt",
+                    videoUrl: "https://files.catbox.moe/noor8m.mp4"
+                },
+                { 
+                    name: "Melanie Martinez - The Contortionist",
+                    srtFile: "Melanie Martinez - The Contortionist.srt",
+                    videoUrl: "https://files.catbox.moe/vxoldg.mp4" 
+                },
+                { 
+                    name: "New West - Those Eyes",
+                    srtFile: "New West - Those Eyes.srt",
+                    videoUrl: "https://files.catbox.moe/k7xhth.mp4" 
                 }
-                const srtContent = await response.text();
-                processSrtContent(srtContent);
-                showLoading(false);
-                return true;
-            } catch (error) {
-                console.error("Error loading SRT:", error);
-                alert("Erro ao carregar o arquivo de legendas. Por favor, tente novamente.");
-                showLoading(false);
-                return false;
+                // Adicione mais lições conforme necessário
+            ];
+            
+            // Variáveis globais
+            let videoElement = document.getElementById('custom-video');
+            let frases = [];
+            let indiceFrase = 0;
+            let fraseAtual = null;
+            let palavrasEmbaralhadas = [];
+            let palavrasClicadas = [];
+            let palavraElementos = {};
+            let progresso = 0;
+            let acertos = 0;
+            let playerReady = false;
+            let monitorTempoId;
+            let fraseAcertada = false;
+            let audioPlaying = false;
+            let currentLessonName = "";
+            let currentLessonIndex = -1;
+            
+            // Função para gerar o URL do CDN do jsDelivr para os arquivos SRT
+            function getSrtCdnUrl(filename) {
+                // URL base do jsDelivr para o seu repositório
+                const baseUrl = "https://cdn.jsdelivr.net/gh/CrisClei2022/listeningpro@main/";
+                // Retorna a URL completa
+                return baseUrl + encodeURIComponent(filename);
             }
-        }
-        
-        // Função para processar o conteúdo SRT
-        function processSrtContent(srt) {
-            frases = srt.split('\n\n').map(bloco => {
-                let linhas = bloco.split('\n');
-                if (linhas.length < 3) return null;
-                
-                return {
-                    tempoInicio: converterTempo(linhas[1].split(' --> ')[0].trim()),
-                    tempoFim: converterTempo(linhas[1].split(' --> ')[1].trim()),
-                    texto: linhas.slice(2).join(' ').trim()
-                };
-            }).filter(frase => frase !== null && frase.texto !== '' && !frase.texto.includes('www.RentAnAdviser.com'));
             
-            indiceFrase = 0;
-            fraseAtual = frases[indiceFrase];
-            palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
-            palavrasClicadas = [];
-            progresso = 0;
-            acertos = 0;
-            fraseAcertada = false;
+            // Função para carregar o arquivo SRT de uma URL
+            async function loadSrtFromUrl(url) {
+                try {
+                    showLoading(true);
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load SRT: ${response.status}`);
+                    }
+                    const srtContent = await response.text();
+                    processSrtContent(srtContent);
+                    showLoading(false);
+                    return true;
+                } catch (error) {
+                    console.error("Error loading SRT:", error);
+                    alert("Erro ao carregar o arquivo de legendas. Por favor, tente novamente.");
+                    showLoading(false);
+                    return false;
+                }
+            }
             
-            criarPalavras();
-            atualizarFrase();
-            atualizarProgresso();
-            atualizarPlacar();
-            document.getElementById('avancar').style.display = 'none';
-        }
-        
-        // Função para carregar uma lição
-        async function loadLesson(lessonIndex) {
-            currentLessonIndex = lessonIndex;
-            const lesson = lessons[lessonIndex];
-            currentLessonName = lesson.name;
-            
-            // Atualizar o título da lição atual
-            document.getElementById('current-lesson').textContent = currentLessonName;
-            
-            // Configurar o vídeo
-            videoElement.src = lesson.videoUrl;
-            videoElement.load();
-            
-            // Carregar o arquivo SRT
-            const srtUrl = getSrtCdnUrl(lesson.srtFile);
-            const success = await loadSrtFromUrl(srtUrl);
-            
-            if (success && currentUser) {
-                // Verificar se há progresso salvo para esta lição
-                const progressoSalvo = await carregarProgressoDoServidor(currentLessonName);
-                
-                if (progressoSalvo && progressoSalvo.fraseIndex < frases.length) {
-                    const retomar = confirm(`Você tem um progresso salvo nesta lição. Deseja continuar de onde parou? (Frase ${progressoSalvo.fraseIndex + 1})`);
+            // Função para processar o conteúdo SRT
+            function processSrtContent(srt) {
+                frases = srt.split('\n\n').map(bloco => {
+                    let linhas = bloco.split('\n');
+                    if (linhas.length < 3) return null;
                     
-                    if (retomar) {
-                        indiceFrase = progressoSalvo.fraseIndex;
-                        acertos = progressoSalvo.acertos || 0;
-                        fraseAtual = frases[indiceFrase];
-                        palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
-                        palavrasClicadas = [];
-                        fraseAcertada = false;
-                        progresso = indiceFrase;
+                    return {
+                        tempoInicio: converterTempo(linhas[1].split(' --> ')[0].trim()),
+                        tempoFim: converterTempo(linhas[1].split(' --> ')[1].trim()),
+                        texto: linhas.slice(2).join(' ').trim()
+                    };
+                }).filter(frase => frase !== null && frase.texto !== '' && !frase.texto.includes('www.RentAnAdviser.com'));
+                
+                indiceFrase = 0;
+                fraseAtual = frases[indiceFrase];
+                palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+                palavrasClicadas = [];
+                progresso = 0;
+                acertos = 0;
+                fraseAcertada = false;
+                
+                criarPalavras();
+                atualizarFrase();
+                atualizarProgresso();
+                atualizarPlacar();
+                document.getElementById('avancar').style.display = 'none';
+            }
+            
+            // Função para carregar uma lição
+            async function loadLesson(lessonIndex) {
+                currentLessonIndex = lessonIndex;
+                const lesson = lessons[lessonIndex];
+                currentLessonName = lesson.name;
+                
+                // Atualizar o título da lição atual
+                document.getElementById('current-lesson').textContent = currentLessonName;
+                
+                // Configurar o vídeo
+                videoElement.src = lesson.videoUrl;
+                videoElement.load();
+                
+                // Carregar o arquivo SRT
+                const srtUrl = getSrtCdnUrl(lesson.srtFile);
+                const success = await loadSrtFromUrl(srtUrl);
+                
+                if (success && currentUser) {
+                    // Verificar se há progresso salvo para esta lição
+                    const progressoSalvo = await carregarProgressoDoServidor(currentLessonName);
+                    
+                    if (progressoSalvo && progressoSalvo.fraseIndex < frases.length) {
+                        const retomar = confirm(`Você tem um progresso salvo nesta lição. Deseja continuar de onde parou? (Frase ${progressoSalvo.fraseIndex + 1})`);
                         
-                        criarPalavras();
-                        atualizarFrase();
-                        atualizarProgresso();
-                        atualizarPlacar();
+                        if (retomar) {
+                            indiceFrase = progressoSalvo.fraseIndex;
+                            acertos = progressoSalvo.acertos || 0;
+                            fraseAtual = frases[indiceFrase];
+                            palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+                            palavrasClicadas = [];
+                            fraseAcertada = false;
+                            progresso = indiceFrase;
+                            
+                            criarPalavras();
+                            atualizarFrase();
+                            atualizarProgresso();
+                            atualizarPlacar();
+                        }
                     }
+                    
+                    // Salvar esta lição como a última acessada
+                    salvarUltimaLicao(lessonIndex);
                 }
                 
-                // Salvar esta lição como a última acessada
-                salvarUltimaLicao(lessonIndex);
+                // Fechar o menu
+                toggleMenu();
             }
             
-            // Fechar o menu
-            toggleMenu();
-        }
-        
-        // Função para mostrar/esconder o indicador de carregamento
-        function showLoading(show) {
-            const loadingElement = document.getElementById('loading');
-            if (show) {
-                loadingElement.classList.add('active');
-            } else {
-                loadingElement.classList.remove('active');
-            }
-        }
-        
-        // Função para converter tempo de legenda para segundos
-        function converterTempo(tempo) {
-            let partes = tempo.split(',');
-            let segundos = partes[0].split(':');
-            return parseInt(segundos[0]) * 3600 + parseInt(segundos[1]) * 60 + parseInt(segundos[2]) + parseInt(partes[1]) / 1000;
-        }
-        
-        // Evento que ocorre quando o vídeo está pronto
-        videoElement.addEventListener('loadedmetadata', function() {
-            playerReady = true;
-            // Iniciar o jogo após o vídeo estar pronto
-            if (fraseAtual) {
-                reproduzirTrechoAtual();
-            }
-        });
-        
-        // Função para monitorar o tempo do vídeo
-        function iniciarMonitorTempo() {
-            monitorTempoId = setInterval(() => {
-                if (playerReady && fraseAtual) {
-                    let tempoAtual = videoElement.currentTime;
-                    if (tempoAtual >= fraseAtual.tempoFim) {
-                        videoElement.pause();
-                        pararMonitorTempo();
-                    }
+            // Função para mostrar/esconder o indicador de carregamento
+            function showLoading(show) {
+                const loadingElement = document.getElementById('loading');
+                if (show) {
+                    loadingElement.classList.add('active');
+                } else {
+                    loadingElement.classList.remove('active');
                 }
-            }, 100);
-        }
-        
-        // Função para parar o monitor de tempo
-        function pararMonitorTempo() {
-            if (monitorTempoId) {
-                clearInterval(monitorTempoId);
-                monitorTempoId = null;
             }
-        }
-        
-        // Função para embaralhar palavras
-        function embaralharPalavras(frase) {
-            if (!frase) return [];
-            let palavras = frase.split(' ');
-            for (let i = palavras.length - 1; i > 0; i--) {
-                let j = Math.floor(Math.random() * (i + 1));
-                let temp = palavras[i];
-                palavras[i] = palavras[j];
-                palavras[j] = temp;
+            
+            // Função para converter tempo de legenda para segundos
+            function converterTempo(tempo) {
+                let partes = tempo.split(',');
+                let segundos = partes[0].split(':');
+                return parseInt(segundos[0]) * 3600 + parseInt(segundos[1]) * 60 + parseInt(segundos[2]) + parseInt(partes[1]) / 1000;
             }
-            return palavras;
-        }
-        
-        // Função para criar elementos de palavras
-        function criarPalavras() {
-            let palavrasDiv = document.getElementById('palavras');
-            palavrasDiv.innerHTML = '';
-            palavraElementos = {};
             
-            if (!palavrasEmbaralhadas || palavrasEmbaralhadas.length === 0) return;
-            
-            palavrasEmbaralhadas.forEach(palavra => {
-                let palavraDiv = document.createElement('div');
-                palavraDiv.classList.add('palavra');
-                palavraDiv.innerText = palavra;
-                palavraDiv.onclick = () => clicarPalavra(palavra, palavraDiv);
-                palavraElementos[palavra] = palavraDiv;
-                palavrasDiv.appendChild(palavraDiv);
+            // Evento que ocorre quando o vídeo está pronto
+            videoElement.addEventListener('loadedmetadata', function() {
+                playerReady = true;
+                // Iniciar o jogo após o vídeo estar pronto
+                if (fraseAtual) {
+                    reproduzirTrechoAtual();
+                }
             });
-        }
-        
-        // Função para lidar com o clique em uma palavra
-        function clicarPalavra(palavra, elemento) {
-            if (!fraseAtual) return;
             
-            // Pausar qualquer áudio em reprodução antes de tocar o novo
-            pausarAudios();
-            
-            // Reproduzir a palavra
-            const utterance = new SpeechSynthesisUtterance(palavra);
-            utterance.lang = detectarIdioma(fraseAtual.texto);
-            
-            // Configurar flag para controlar áudio
-            audioPlaying = true;
-            utterance.onend = function() {
-                audioPlaying = false;
-            };
-            
-            speechSynthesis.speak(utterance);
-            
-            if (elemento.classList.contains('acertada')) {
-                return; // Palavra já foi usada
+            // Função para monitorar o tempo do vídeo
+            function iniciarMonitorTempo() {
+                monitorTempoId = setInterval(() => {
+                    if (playerReady && fraseAtual) {
+                        let tempoAtual = videoElement.currentTime;
+                        if (tempoAtual >= fraseAtual.tempoFim) {
+                            videoElement.pause();
+                            pararMonitorTempo();
+                        }
+                    }
+                }, 100);
             }
             
-            let fraseSplit = fraseAtual.texto.split(' ');
-            if (palavrasClicadas.length < fraseSplit.length && fraseSplit[palavrasClicadas.length] === palavra) {
-                palavrasClicadas.push(palavra);
-                elemento.classList.add('acertada');
-                atualizarFrase();
-                verificarFrase();
-            } else {
-                // Adicionamos a classe errada e removemos após 500ms
-                elemento.classList.add('errada');
-                setTimeout(() => {
-                    elemento.classList.remove('errada');
-                }, 500);
-            }
-        }
-        
-        // Função para pausar todos os áudios        
-        function pausarAudios() {
-            // Pausar o sintetizador de voz
-            if (speechSynthesis.speaking) {
-                speechSynthesis.cancel();
-                audioPlaying = false;
+            // Função para parar o monitor de tempo
+            function pararMonitorTempo() {
+                if (monitorTempoId) {
+                    clearInterval(monitorTempoId);
+                    monitorTempoId = null;
+                }
             }
             
-            // Pausar o vídeo se estiver tocando
-            if (playerReady && !videoElement.paused) {
-                videoElement.pause();
+            // Função para embaralhar palavras
+            function embaralharPalavras(frase) {
+                if (!frase) return [];
+                let palavras = frase.split(' ');
+                for (let i = palavras.length - 1; i > 0; i--) {
+                    let j = Math.floor(Math.random() * (i + 1));
+                    let temp = palavras[i];
+                    palavras[i] = palavras[j];
+                    palavras[j] = temp;
+                }
+                return palavras;
             }
-        }
-        
-        // Função para detectar o idioma com base no texto
-        function detectarIdioma(texto) {
-            if (!texto) return 'en-US';
             
-            // Esta é uma detecção simples
-            if (texto.includes('Aku') || texto.includes('kamu')) {
-                return 'id-ID'; // Indonésio
-            } else if (texto.includes('Scheiße')) {
-                return 'de-DE'; // Alemão
+            // Função para criar elementos de palavras
+            function criarPalavras() {
+                let palavrasDiv = document.getElementById('palavras');
+                palavrasDiv.innerHTML = '';
+                palavraElementos = {};
+                
+                if (!palavrasEmbaralhadas || palavrasEmbaralhadas.length === 0) return;
+                
+                palavrasEmbaralhadas.forEach(palavra => {
+                    let palavraDiv = document.createElement('div');
+                    palavraDiv.classList.add('palavra');
+                    palavraDiv.innerText = palavra;
+                    palavraDiv.onclick = () => clicarPalavra(palavra, palavraDiv);
+                    palavraElementos[palavra] = palavraDiv;
+                    palavrasDiv.appendChild(palavraDiv);
+                });
             }
-            return 'en-US'; // Por padrão, usamos inglês
-        }
-        
-        // Função para atualizar a frase exibida
-        function atualizarFrase() {
-            let fraseDiv = document.getElementById('frase');
-            fraseDiv.innerHTML = '';
             
-            // Adicionar as palavras já clicadas com espaço entre elas
-            palavrasClicadas.forEach((palavra, index) => {
-                const span = document.createElement('span');
-                span.textContent = palavra;
-                span.classList.add('palavra-na-frase'); // Adiciona classe para estilização
-                fraseDiv.appendChild(span);
-            });
-        }
-        
-        // Função para verificar se a frase está completa
-        function verificarFrase() {
-            if (!fraseAtual) return;
+            // Função para lidar com o clique em uma palavra
+            function clicarPalavra(palavra, elemento) {
+                if (!fraseAtual) return;
+                
+                // Pausar qualquer áudio em reprodução antes de tocar o novo
+                pausarAudios();
+                
+                // Reproduzir a palavra
+                const utterance = new SpeechSynthesisUtterance(palavra);
+                utterance.lang = detectarIdioma(fraseAtual.texto);
+                
+                // Configurar flag para controlar áudio
+                audioPlaying = true;
+                utterance.onend = function() {
+                    audioPlaying = false;
+                };
+                
+                speechSynthesis.speak(utterance);
+                
+                if (elemento.classList.contains('acertada')) {
+                    return; // Palavra já foi usada
+                }
+                
+                let fraseSplit = fraseAtual.texto.split(' ');
+                if (palavrasClicadas.length < fraseSplit.length && fraseSplit[palavrasClicadas.length] === palavra) {
+                    palavrasClicadas.push(palavra);
+                    elemento.classList.add('acertada');
+                    atualizarFrase();
+                    verificarFrase();
+                } else {
+                    // Adicionamos a classe errada e removemos após 500ms
+                    elemento.classList.add('errada');
+                    setTimeout(() => {
+                        elemento.classList.remove('errada');
+                    }, 500);
+                }
+            }
             
-            if (palavrasClicadas.join(' ') === fraseAtual.texto) {
-                document.getElementById('avancar').style.display = 'inline-block';
+            // Função para pausar todos os áudios        
+            function pausarAudios() {
+                // Pausar o sintetizador de voz
+                if (speechSynthesis.speaking) {
+                    speechSynthesis.cancel();
+                    audioPlaying = false;
+                }
+                
+                // Pausar o vídeo se estiver tocando
                 if (playerReady && !videoElement.paused) {
                     videoElement.pause();
                 }
-                progresso++;
-                fraseAcertada = true;
-                acertos++;
-                atualizarPlacar();
-                atualizarProgresso();
             }
-        }
-        
-        // Função para ler a frase atual usando o sintetizador de voz
-        function lerFraseAtual() {
-            if (!fraseAtual) return;
             
-            // Pausar qualquer áudio em reprodução
-            pausarAudios();
+            // Função para detectar o idioma com base no texto
+            function detectarIdioma(texto) {
+                if (!texto) return 'en-US';
+                
+                // Esta é uma detecção simples
+                if (texto.includes('Aku') || texto.includes('kamu')) {
+                    return 'id-ID'; // Indonésio
+                } else if (texto.includes('Scheiße')) {
+                    return 'de-DE'; // Alemão
+                }
+                return 'en-US'; // Por padrão, usamos inglês
+            }
             
-            const utterance = new SpeechSynthesisUtterance(fraseAtual.texto);
-            utterance.lang = detectarIdioma(fraseAtual.texto);
+            // Função para atualizar a frase exibida
+            function atualizarFrase() {
+                let fraseDiv = document.getElementById('frase');
+                fraseDiv.innerHTML = '';
+                
+                // Adicionar as palavras já clicadas com espaço entre elas
+                palavrasClicadas.forEach((palavra, index) => {
+                    const span = document.createElement('span');
+                    span.textContent = palavra;
+                    span.classList.add('palavra-na-frase'); // Adiciona classe para estilização
+                    fraseDiv.appendChild(span);
+                });
+            }
             
-            // Configurar flag para controlar áudio
-            audioPlaying = true;
-            utterance.onend = function() {
-                audioPlaying = false;
+            // Função para verificar se a frase está completa
+            function verificarFrase() {
+                if (!fraseAtual) return;
+                
+                if (palavrasClicadas.join(' ') === fraseAtual.texto) {
+                    document.getElementById('avancar').style.display = 'inline-block';
+                    if (playerReady && !videoElement.paused) {
+                        videoElement.pause();
+                    }
+                    progresso++;
+                    fraseAcertada = true;
+                    acertos++;
+                    atualizarPlacar();
+                    atualizarProgresso();
+                }
+            }
+            
+            // Função para ler a frase atual usando o sintetizador de voz
+            function lerFraseAtual() {
+                if (!fraseAtual) return;
+                
+                // Pausar qualquer áudio em reprodução
+                pausarAudios();
+                
+                const utterance = new SpeechSynthesisUtterance(fraseAtual.texto);
+                utterance.lang = detectarIdioma(fraseAtual.texto);
+                
+                // Configurar flag para controlar áudio
+                audioPlaying = true;
+                utterance.onend = function() {
+                    audioPlaying = false;
+                };
+                
+                speechSynthesis.speak(utterance);
+            }
+            
+            // Função para atualizar o progresso
+            function atualizarProgresso() {
+                document.getElementById('progresso').innerText = `Progresso: ${progresso} de ${frases.length}`;
+            }
+            
+            // Função para atualizar o placar
+            function atualizarPlacar() {
+                document.getElementById('placar').innerText = `Acertos: ${acertos}`;
+            }
+            
+            // Função para reproduzir o trecho do vídeo atual
+            function reproduzirTrechoAtual() {
+                if (!fraseAtual) return;
+                
+                // Verificar se o sintetizador de voz está tocando
+                if (audioPlaying) {
+                    pausarAudios();
+                }
+                
+                if (playerReady) {
+                    videoElement.currentTime = fraseAtual.tempoInicio;
+                    videoElement.play();
+                    iniciarMonitorTempo();
+                }
+            }
+            
+            // Função para alternar a exibição do menu
+            function toggleMenu() {
+                const menuButton = document.getElementById('menu-button');
+                const menuOverlay = document.getElementById('menu-overlay');
+                
+                menuButton.classList.toggle('active');
+                menuOverlay.classList.toggle('active');
+            }
+            
+            // Inicializar botões de menu
+            function initializeMenuButtons() {
+                const menuItemsContainer = document.getElementById('menu-items');
+                menuItemsContainer.innerHTML = '<h2 class="menu-title">Lista de Lições</h2>';
+                
+                lessons.forEach((lesson, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = lesson.name;
+                    button.classList.add('lesson-button');
+                    button.onclick = () => loadLesson(index);
+                    menuItemsContainer.appendChild(button);
+                });
+            }
+            
+            // Functions for user authentication with Supabase
+            async function signUp(email, password) {
+                try {
+                    // Mostrar mensagem de carregamento
+                    document.getElementById('auth-message').textContent = "Registrando...";
+                    
+                    console.log("Iniciando registro com:", email);
+                    
+                    // Registrar usuário com Supabase
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) {
+                        console.error("Erro durante registro:", error);
+                        throw error;
+                    }
+                    
+                    console.log("Registro bem-sucedido:", data);
+                    currentUser = data.user;
+                    
+                    // Atualizar a interface após registro bem-sucedido
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('username-display').textContent = email;
+                    
+                    // Limpar mensagem
+                    document.getElementById('auth-message').textContent = "";
+                    
+                    // Criar tabelas necessárias se não existirem
+                    await initializeDatabase();
+                    
+                    return true;
+                } catch (error) {
+                    console.error("Error signing up:", error);
+                    document.getElementById('auth-message').textContent = `Erro ao registrar: ${error.message}`;
+                    return false;
+                }
+            }
+
+            async function logIn(email, password) {
+                try {
+                    // Mostrar mensagem de carregamento
+                    document.getElementById('auth-message').textContent = "Entrando...";
+                    
+                    console.log("Iniciando login com:", email);
+                    
+                    // Login com Supabase
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) {
+                        console.error("Erro durante login:", error);
+                        throw error;
+                    }
+                    
+                    console.log("Login bem-sucedido:", data);
+                    currentUser = data.user;
+                    
+                    // Atualizar a interface após login bem-sucedido
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('username-display').textContent = email;
+                    
+                    // Limpar mensagem
+                    document.getElementById('auth-message').textContent = "";
+                    
+                    return true;
+                } catch (error) {
+                    console.error("Error logging in:", error);
+                    document.getElementById('auth-message').textContent = `Erro ao entrar: ${error.message}`;
+                    return false;
+                }
+            }
+
+            async function logOut() {
+                try {
+                    await supabaseClient.auth.signOut();
+                    currentUser = null;
+                    
+                    // Mostrar tela de login novamente
+                    document.getElementById('auth-container').style.display = 'flex';
+                    document.getElementById('username-display').textContent = "";
+                } catch (error) {
+                    console.error("Error logging out:", error);
+                    alert("Erro ao sair: " + error.message);
+                }
+            }
+            
+            // Inicializar o banco de dados (criar tabelas se não existirem)
+            async function initializeDatabase() {
+                try {
+                    console.log("Inicializando banco de dados...");
+                    
+                    // Verificar se as tabelas existem e criar se necessário
+                    // Tabela para preferências do usuário
+                    const { error: prefError } = await supabaseClient
+                        .from('user_preferences')
+                        .select('id')
+                        .limit(1);
+                    
+                    if (prefError && prefError.code === '42P01') {
+                        console.log("Tabela user_preferences não existe, criando...");
+                        // Tabela não existe, criar via SQL
+                        const { error } = await supabaseClient.rpc('create_user_preferences_table');
+                        if (error) {
+                            console.error("Erro ao criar tabela user_preferences:", error);
+                        }
+                    }
+                    
+                    // Tabela para progresso das lições
+                    const { error: progError } = await supabaseClient
+                        .from('lesson_progress')
+                        .select('id')
+                        .limit(1);
+                    
+                    if (progError && progError.code === '42P01') {
+                        console.log("Tabela lesson_progress não existe, criando...");
+                        // Tabela não existe, criar via SQL
+                        const { error } = await supabaseClient.rpc('create_lesson_progress_table');
+                        if (error) {
+                            console.error("Erro ao criar tabela lesson_progress:", error);
+                        }
+                    }
+                    
+                    console.log("Inicialização do banco de dados concluída");
+                } catch (error) {
+                    console.error("Error initializing database:", error);
+                }
+            }
+            
+            // Função para salvar a última lição acessada no Supabase
+            async function salvarUltimaLicao(lessonIndex) {
+                if (!currentUser) return;
+                
+                try {
+                    // Verificar se o usuário já tem um registro de preferência
+                    const { data, error } = await supabaseClient
+                        .from('user_preferences')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .single();
+                    
+                    if (error && error.code !== 'PGRST116') {
+                        // Erro diferente de "não encontrado"
+                        throw error;
+                    }
+                    
+                    if (data) {
+                        // Atualizar registro existente
+                        await supabaseClient
+                            .from('user_preferences')
+                            .update({
+                                last_lesson_index: lessonIndex,
+                                last_lesson_name: lessons[lessonIndex].name,
+                                updated_at: new Date()
+                            })
+                            .eq('user_id', currentUser.id);
+                    } else {
+                        // Criar novo registro
+                        await supabaseClient
+                            .from('user_preferences')
+                            .insert({
+                                user_id: currentUser.id,
+                                last_lesson_index: lessonIndex,
+                                last_lesson_name: lessons[lessonIndex].name
+                            });
+                    }
+                    
+                    console.log("Última lição salva com sucesso");
+                } catch (error) {
+                    console.error("Erro ao salvar última lição:", error);
+                }
+            }
+
+            // Função para carregar a última lição acessada do Supabase
+            async function carregarUltimaLicaoDoServidor() {
+                if (!currentUser) return null;
+                
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('user_preferences')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .single();
+                    
+                    if (error) {
+                        if (error.code === 'PGRST116') {
+                            // Registro não encontrado
+                            return null;
+                        }
+                        throw error;
+                    }
+                    
+                    if (data && data.last_lesson_index !== undefined && lessons[data.last_lesson_index]) {
+                        const carregarUltimaLicao = confirm(`Deseja carregar a última lição acessada? (${lessons[data.last_lesson_index].name})`);
+                        if (carregarUltimaLicao) {
+                            loadLesson(data.last_lesson_index);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Erro ao carregar última lição:", error);
+                }
+            }
+
+            // Função para salvar progresso de uma lição específica no Supabase
+            async function salvarProgressoDoServidor(lessonName, fraseIndex, acertos) {
+                if (!currentUser) return;
+                
+                try {
+                    // Verificar se há progresso existente para esta lição
+                    const { data, error } = await supabaseClient
+                        .from('lesson_progress')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .eq('lesson_name', lessonName)
+                        .single();
+                    
+                    if (error && error.code !== 'PGRST116') {
+                        // Erro diferente de "não encontrado"
+                        throw error;
+                    }
+                    
+                    if (data) {
+                        // Atualizar registro existente
+                        await supabaseClient
+                            .from('lesson_progress')
+                            .update({
+                                frase_index: fraseIndex,
+                                acertos: acertos,
+                                total_frases: frases.length,
+                                updated_at: new Date()
+                            })
+                            .eq('id', data.id);
+                    } else {
+                        // Criar novo registro
+                        await supabaseClient
+                            .from('lesson_progress')
+                            .insert({
+                                user_id: currentUser.id,
+                                lesson_name: lessonName,
+                                frase_index: fraseIndex,
+                                acertos: acertos,
+                                total_frases: frases.length
+                            });
+                    }
+                    
+                    console.log("Progresso salvo com sucesso");
+                } catch (error) {
+                    console.error("Erro ao salvar progresso:", error);
+                }
+            }
+
+            // Função para carregar progresso de uma lição específica do Supabase
+            async function carregarProgressoDoServidor(lessonName) {
+                if (!currentUser) return null;
+                
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('lesson_progress')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .eq('lesson_name', lessonName)
+                        .single();
+                    
+                    if (error) {
+                        if (error.code === 'PGRST116') {
+                            // Registro não encontrado
+                            return null;
+                        }
+                        throw error;
+                    }
+                    
+                    if (data) {
+                        return {
+                            fraseIndex: data.frase_index,
+                            acertos: data.acertos,
+                            timestamp: data.updated_at
+                        };
+                    }
+                    
+                    return null;
+                } catch (error) {
+                    console.error("Erro ao carregar progresso:", error);
+                    return null;
+                }
+            }
+
+            // Função para auto-salvar progresso periodicamente
+            function autoSaveProgress() {
+                if (!currentUser || !currentLessonName) return;
+                
+                // Salvar progresso a cada minuto
+                setInterval(() => {
+                    salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
+                }, 60000); // 60 segundos
+            }
+
+            // Verificar se o usuário já está logado
+            async function checkCurrentUser() {
+                const { data, error } = await supabaseClient.auth.getSession();
+                
+                if (error) {
+                    console.error("Error checking session:", error);
+                    return false;
+                }
+                
+                if (data.session) {
+                    currentUser = data.session.user;
+                    // Usuário já está logado, esconder tela de login
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('username-display').textContent = currentUser.email;
+                    return true;
+                } else {
+                    // Usuário não está logado, mostrar tela de login
+                    document.getElementById('auth-container').style.display = 'flex';
+                    return false;
+                }
+            }
+
+            // Adicionar event listeners para botões de login e registro
+            document.getElementById('login-btn').addEventListener('click', async function() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    document.getElementById('auth-message').textContent = "Por favor, preencha todos os campos!";
+                    return;
+                }
+                
+                await logIn(email, password);
+                if (currentUser) {
+                    carregarUltimaLicaoDoServidor();
+                    autoSaveProgress();
+                }
+            });
+
+            document.getElementById('register-btn').addEventListener('click', async function() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    document.getElementById('auth-message').textContent = "Por favor, preencha todos os campos!";
+                    return;
+                }
+                
+                console.log("Botão de registro clicado para:", email);
+                await signUp(email, password);
+                if (currentUser) {
+                    autoSaveProgress();
+                }
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                logOut();
+            });
+
+            // Adicionar event listeners para botões do jogo
+            document.getElementById('avancar').onclick = function() {
+                indiceFrase++;
+                if (indiceFrase >= frases.length) {
+                    alert("Parabéns! Você completou todas as frases!");
+                    indiceFrase = 0;
+                    acertos = 0;
+                    progresso = 0;
+                    atualizarPlacar();
+                    atualizarProgresso();
+                }
+                fraseAtual = frases[indiceFrase];
+                palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
+                palavrasClicadas = [];
+                fraseAcertada = false;
+                criarPalavras();
+                atualizarFrase();
+                document.getElementById('avancar').style.display = 'none';
+                reproduzirTrechoAtual();
+                
+                // Save progress to Supabase after advancing
+                if (currentUser && currentLessonName) {
+                    salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
+                }
             };
             
-            speechSynthesis.speak(utterance);
-        }
-        
-        // Função para atualizar o progresso
-        function atualizarProgresso() {
-            document.getElementById('progresso').innerText = `Progresso: ${progresso} de ${frases.length}`;
-        }
-        
-        // Função para atualizar o placar
-        function atualizarPlacar() {
-            document.getElementById('placar').innerText = `Acertos: ${acertos}`;
-        }
-        
-        // Função para reproduzir o trecho do vídeo atual
-        function reproduzirTrechoAtual() {
-            if (!fraseAtual) return;
-            
-            // Verificar se o sintetizador de voz está tocando
-            if (audioPlaying) {
-                pausarAudios();
-            }
-            
-            if (playerReady) {
-                videoElement.currentTime = fraseAtual.tempoInicio;
-                videoElement.play();
-                iniciarMonitorTempo();
-            }
-        }
-        
-        // Função para alternar a exibição do menu
-        function toggleMenu() {
-            const menuButton = document.getElementById('menu-button');
-            const menuOverlay = document.getElementById('menu-overlay');
-            
-            menuButton.classList.toggle('active');
-            menuOverlay.classList.toggle('active');
-        }
-        
-        // Inicializar botões de menu
-        function initializeMenuButtons() {
-            const menuItemsContainer = document.getElementById('menu-items');
-            menuItemsContainer.innerHTML = '<h2 class="menu-title">Lista de Lições</h2>';
-            
-            lessons.forEach((lesson, index) => {
-                const button = document.createElement('button');
-                button.textContent = lesson.name;
-                button.classList.add('lesson-button');
-                button.onclick = () => loadLesson(index);
-                menuItemsContainer.appendChild(button);
-            });
-        }
-        
-        // Adicionar event listeners
-        document.getElementById('avancar').onclick = function() {
-            indiceFrase++;
-            if (indiceFrase >= frases.length) {
-                alert("Parabéns! Você completou todas as frases!");
-                indiceFrase = 0;
-                acertos = 0;
-                progresso = 0;
-                atualizarPlacar();
-                atualizarProgresso();
-            }
-            fraseAtual = frases[indiceFrase];
-            palavrasEmbaralhadas = embaralharPalavras(fraseAtual.texto);
-            palavrasClicadas = [];
-            fraseAcertada = false;
-            criarPalavras();
-            atualizarFrase();
-            document.getElementById('avancar').style.display = 'none';
-            reproduzirTrechoAtual();
-        };
-        
-        document.getElementById('desistir').onclick = function() {
-            if (!fraseAtual) return;
-            
-            palavrasClicadas = fraseAtual.texto.split(' ');
-            atualizarFrase();
-            
-            Object.keys(palavraElementos).forEach(palavra => {
-                if (fraseAtual.texto.split(' ').includes(palavra)) {
-                    palavraElementos[palavra].classList.add('acertada');
-                }
-            });
-            
-            if (!fraseAcertada) {
-                progresso++;
-                atualizarProgresso();
-            }
-            
-            document.getElementById('avancar').style.display = 'inline-block';
-        };
-        
-        document.getElementById('repetir').onclick = function() {
-            reproduzirTrechoAtual();
-        };
-        
-        document.getElementById('lerFrase').onclick = function() {
-            lerFraseAtual();
-        };
-        
-        document.getElementById('menu-button').onclick = toggleMenu;
-        document.querySelector('.close-button').onclick = toggleMenu;
-        
-        // Functions for user authentication with Supabase
-        async function signUp(email, password) {
-            try {
-                // Mostrar mensagem de carregamento
-                document.getElementById('auth-message').textContent = "Registrando...";
+            document.getElementById('desistir').onclick = function() {
+                if (!fraseAtual) return;
                 
-                // Registrar usuário com Supabase
-                const { data, error } = await supabase.auth.signUp({
-                    email: email,
-                    password: password
+                palavrasClicadas = fraseAtual.texto.split(' ');
+                atualizarFrase();
+                
+                Object.keys(palavraElementos).forEach(palavra => {
+                    if (fraseAtual.texto.split(' ').includes(palavra)) {
+                        palavraElementos[palavra].classList.add('acertada');
+                    }
                 });
                 
-                if (error) throw error;
-                
-                currentUser = data.user;
-                
-                // Atualizar a interface após registro bem-sucedido
-                document.getElementById('auth-container').style.display = 'none';
-                document.getElementById('username-display').textContent = email;
-                
-                // Limpar mensagem
-                document.getElementById('auth-message').textContent = "";
-                
-                // Criar tabelas necessárias se não existirem
-                await initializeDatabase();
-                
-                return true;
-            } catch (error) {
-                console.error("Error signing up:", error);
-                document.getElementById('auth-message').textContent = `Erro ao registrar: ${error.message}`;
-                return false;
-            }
-        }
-
-        async function logIn(email, password) {
-            try {
-                // Mostrar mensagem de carregamento
-                document.getElementById('auth-message').textContent = "Entrando...";
-                
-                // Login com Supabase
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-                
-                if (error) throw error;
-                
-                currentUser = data.user;
-                
-                // Atualizar a interface após login bem-sucedido
-                document.getElementById('auth-container').style.display = 'none';
-                document.getElementById('username-display').textContent = email;
-                
-                // Limpar mensagem
-                document.getElementById('auth-message').textContent = "";
-                
-                return true;
-            } catch (error) {
-                console.error("Error logging in:", error);
-                document.getElementById('auth-message').textContent = `Erro ao entrar: ${error.message}`;
-                return false;
-            }
-        }
-
-        async function logOut() {
-            try {
-                await supabase.auth.signOut();
-                currentUser = null;
-                
-                // Mostrar tela de login novamente
-                document.getElementById('auth-container').style.display = 'flex';
-                document.getElementById('username-display').textContent = "";
-            } catch (error) {
-                console.error("Error logging out:", error);
-                alert("Erro ao sair: " + error.message);
-            }
-        }
-        
-        // Inicializar o banco de dados (criar tabelas se não existirem)
-        async function initializeDatabase() {
-            try {
-                // Verificar se as tabelas existem e criar se necessário
-                // Tabela para preferências do usuário
-                const { error: prefError } = await supabase
-                    .from('user_preferences')
-                    .select('id')
-                    .limit(1);
-                
-                if (prefError && prefError.code === '42P01') {
-                    // Tabela não existe, criar
-                    await supabase.rpc('create_user_preferences_table');
+                if (!fraseAcertada) {
+                    progresso++;
+                    atualizarProgresso();
                 }
                 
-                // Tabela para progresso das lições
-                const { error: progError } = await supabase
-                    .from('lesson_progress')
-                    .select('id')
-                    .limit(1);
-                
-                if (progError && progError.code === '42P01') {
-                    // Tabela não existe, criar
-                    await supabase.rpc('create_lesson_progress_table');
-                }
-            } catch (error) {
-                console.error("Error initializing database:", error);
-            }
-        }
-        
-        // Função para salvar a última lição acessada no Supabase
-        async function salvarUltimaLicao(lessonIndex) {
-            if (!currentUser) return;
+                document.getElementById('avancar').style.display = 'inline-block';
+            };
             
-            try {
-                // Verificar se o usuário já tem um registro de preferência
-                const { data, error } = await supabase
-                    .from('user_preferences')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .single();
-                
-                if (error && error.code !== 'PGRST116') {
-                    // Erro diferente de "não encontrado"
-                    throw error;
-                }
-                
-                if (data) {
-                    // Atualizar registro existente
-                    await supabase
-                        .from('user_preferences')
-                        .update({
-                            last_lesson_index: lessonIndex,
-                            last_lesson_name: lessons[lessonIndex].name,
-                            updated_at: new Date()
-                        })
-                        .eq('user_id', currentUser.id);
-                } else {
-                    // Criar novo registro
-                    await supabase
-                        .from('user_preferences')
-                        .insert({
-                            user_id: currentUser.id,
-                            last_lesson_index: lessonIndex,
-                            last_lesson_name: lessons[lessonIndex].name
-                        });
-                }
-                
-                console.log("Última lição salva com sucesso");
-            } catch (error) {
-                console.error("Erro ao salvar última lição:", error);
-            }
-        }
-
-        // Função para carregar a última lição acessada do Supabase
-        async function carregarUltimaLicaoDoServidor() {
-            if (!currentUser) return null;
+            document.getElementById('repetir').onclick = function() {
+                reproduzirTrechoAtual();
+            };
             
-            try {
-                const { data, error } = await supabase
-                    .from('user_preferences')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .single();
-                
-                if (error) {
-                    if (error.code === 'PGRST116') {
-                        // Registro não encontrado
-                        return null;
-                    }
-                    throw error;
-                }
-                
-                if (data && data.last_lesson_index !== undefined && lessons[data.last_lesson_index]) {
-                    const carregarUltimaLicao = confirm(`Deseja carregar a última lição acessada? (${lessons[data.last_lesson_index].name})`);
-                    if (carregarUltimaLicao) {
-                        loadLesson(data.last_lesson_index);
-                    }
-                }
-            } catch (error) {
-                console.error("Erro ao carregar última lição:", error);
-            }
-        }
-
-        // Função para salvar progresso de uma lição específica no Supabase
-        async function salvarProgressoDoServidor(lessonName, fraseIndex, acertos) {
-            if (!currentUser) return;
+            document.getElementById('lerFrase').onclick = function() {
+                lerFraseAtual();
+            };
             
-            try {
-                // Verificar se há progresso existente para esta lição
-                const { data, error } = await supabase
-                    .from('lesson_progress')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .eq('lesson_name', lessonName)
-                    .single();
-                
-                if (error && error.code !== 'PGRST116') {
-                    // Erro diferente de "não encontrado"
-                    throw error;
-                }
-                
-                if (data) {
-                    // Atualizar registro existente
-                    await supabase
-                        .from('lesson_progress')
-                        .update({
-                            frase_index: fraseIndex,
-                            acertos: acertos,
-                            total_frases: frases.length,
-                            updated_at: new Date()
-                        })
-                        .eq('id', data.id);
-                } else {
-                    // Criar novo registro
-                    await supabase
-                        .from('lesson_progress')
-                        .insert({
-                            user_id: currentUser.id,
-                            lesson_name: lessonName,
-                            frase_index: fraseIndex,
-                            acertos: acertos,
-                            total_frases: frases.length
-                        });
-                }
-                
-                console.log("Progresso salvo com sucesso");
-            } catch (error) {
-                console.error("Erro ao salvar progresso:", error);
-            }
-        }
-
-        // Função para carregar progresso de uma lição específica do Supabase
-        async function carregarProgressoDoServidor(lessonName) {
-            if (!currentUser) return null;
-            
-            try {
-                const { data, error } = await supabase
-                    .from('lesson_progress')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .eq('lesson_name', lessonName)
-                    .single();
-                
-                if (error) {
-                    if (error.code === 'PGRST116') {
-                        // Registro não encontrado
-                        return null;
-                    }
-                    throw error;
-                }
-                
-                if (data) {
-                    return {
-                        fraseIndex: data.frase_index,
-                        acertos: data.acertos,
-                        timestamp: data.updated_at
-                    };
-                }
-                
-                return null;
-            } catch (error) {
-                console.error("Erro ao carregar progresso:", error);
-                return null;
-            }
-        }
-
-        // Função para auto-salvar progresso periodicamente
-        function autoSaveProgress() {
-            if (!currentUser || !currentLessonName) return;
-            
-            // Salvar progresso a cada minuto
-            setInterval(() => {
-                salvarProgressoDoServidor(currentLessonName, indiceFrase, acertos);
-            }, 60000); // 60 segundos
-        }
-
-        // Verificar se o usuário já está logado
-        async function checkCurrentUser() {
-            const { data, error } = await supabase.auth.getSession();
-            
-            if (error) {
-                console.error("Error checking session:", error);
-                return false;
-            }
-            
-            if (data.session) {
-                currentUser = data.session.user;
-                // Usuário já está logado, esconder tela de login
-                document.getElementById('auth-container').style.display = 'none';
-                document.getElementById('username-display').textContent = currentUser.email;
-                return true;
-            } else {
-                // Usuário não está logado, mostrar tela de login
-                document.getElementById('auth-container').style.display = 'flex';
-                return false;
-            }
-        }
-
-        // Adicionar event listeners para botões de login e registro
-        document.getElementById('login-btn').addEventListener('click', async function() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            if (!email || !password) {
-                document.getElementById('auth-message').textContent = "Por favor, preencha todos os campos!";
-                return;
-            }
-            
-            await logIn(email, password);
-            if (currentUser) {
-                carregarUltimaLicaoDoServidor();
-                autoSaveProgress();
-            }
-        });
-
-        document.getElementById('register-btn').addEventListener('click', async function() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            if (!email || !password) {
-                document.getElementById('auth-message').textContent = "Por favor, preencha todos os campos!";
-                return;
-            }
-            
-            await signUp(email, password);
-            if (currentUser) {
-                autoSaveProgress();
-            }
-        });
-
-        document.getElementById('logout-btn').addEventListener('click', function() {
-            logOut();
-        });
-
-        // Inicializar a aplicação quando o DOM estiver carregado
-        document.addEventListener('DOMContentLoaded', async function() {
-            initializeMenuButtons();
-            await checkCurrentUser();
-            
-            // Mostrar inicialmente a mensagem para selecionar uma lição
-            document.getElementById('current-lesson').textContent = "Selecione uma lição no menu";
-            
-            // Verificar se há algum parâmetro na URL para carregar uma lição específica
-            const urlParams = new URLSearchParams(window.location.search);
-            const lessonParam = urlParams.get('lesson');
-            
-            if (lessonParam !== null && !isNaN(lessonParam) && lessons[parseInt(lessonParam)]) {
-                // Carregar a lição especificada pelo parâmetro da URL
-                loadLesson(parseInt(lessonParam));
-            } else {
-                // Se não houver parâmetro, abrir o menu automaticamente
-                setTimeout(() => {
-                    toggleMenu();
-                }, 500);
-            }
+            document.getElementById('menu-button').onclick = toggleMenu;
+            document.querySelector('.close-button').onclick = toggleMenu;
             
             // Adicionar listener para teclas de atalho
             document.addEventListener('keydown', function(event) {
@@ -1409,6 +1428,27 @@
             videoElement.addEventListener('ended', function() {
                 pararMonitorTempo();
             });
+            
+            // Inicializar a aplicação
+            initializeMenuButtons();
+            checkCurrentUser();
+            
+            // Mostrar inicialmente a mensagem para selecionar uma lição
+            document.getElementById('current-lesson').textContent = "Selecione uma lição no menu";
+            
+            // Verificar se há algum parâmetro na URL para carregar uma lição específica
+            const urlParams = new URLSearchParams(window.location.search);
+            const lessonParam = urlParams.get('lesson');
+            
+            if (lessonParam !== null && !isNaN(lessonParam) && lessons[parseInt(lessonParam)]) {
+                // Carregar a lição especificada pelo parâmetro da URL
+                loadLesson(parseInt(lessonParam));
+            } else {
+                // Se não houver parâmetro, abrir o menu automaticamente
+                setTimeout(() => {
+                    toggleMenu();
+                }, 500);
+            }
         });
     </script>    
 </body>
