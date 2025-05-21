@@ -1,0 +1,86 @@
+Excelente pergunta. Proteger legalmente o código-fonte e a propriedade intelectual do seu projeto não é tão trabalhoso quanto parece, e vale muito a pena, principalmente se o projeto tem potencial comercial. Aqui vai um resumo prático:
+
+
+---
+
+1. Proteção automática por direito autoral
+
+No Brasil e internacionalmente, o código-fonte é automaticamente protegido por direitos autorais assim que você o cria. Isso é garantido por:
+
+Lei de Direitos Autorais Brasileira (Lei 9.610/98)
+
+Convenção de Berna (ratificada por +180 países)
+
+
+Você não precisa registrar nada para ter esse direito. Porém, o registro ajuda a comprovar a autoria em caso de plágio.
+
+
+---
+
+2. Registro de Software no Brasil (opcional, mas recomendado)
+
+Você pode registrar o seu código no INPI (Instituto Nacional da Propriedade Industrial). Esse registro não é obrigatório, mas:
+
+Serve como prova oficial de autoria
+
+É útil em processos judiciais
+
+Custa cerca de R$ 185 (pessoa física/MEI) e pode ser feito online
+
+
+Site oficial: https://gov.br/inpi
+
+
+---
+
+3. Alternativa internacional gratuita: GitHub + SHA ou Blockchain
+
+Se você subir seu código no GitHub com data e hora, isso já serve como prova técnica de autoria em muitos casos.
+
+Você pode reforçar isso com:
+
+Hashes SHA256 do código (prova matemática de originalidade)
+
+Serviços de blockchain para registro de autoria, como:
+
+https://po.et/
+
+https://originstamp.com/
+
+
+
+
+---
+
+4. Licenciamento
+
+Se quiser controlar como as pessoas podem usar seu código (mesmo que ele esteja público no GitHub), adicione um arquivo LICENSE.
+
+Exemplos:
+
+MIT (mais permissiva)
+
+Proprietária / customizada (ex: "uso educacional apenas", "uso não comercial", etc.)
+
+Posso criar uma para você sob medida.
+
+
+
+---
+
+Conclusão
+
+Não é difícil nem caro proteger seu projeto legalmente. Você pode seguir esta ordem:
+
+1. Proteger tecnicamente: obfuscar e não deixar lógica sensível no front-end.
+
+
+2. Proteger legalmente: deixar claro o aviso de copyright e considerar registrar no INPI se o projeto crescer.
+
+
+3. Proteger estrategicamente: migrar a lógica sensível para o backend (como Supabase Edge Functions).
+
+
+
+Se quiser, posso gerar um aviso legal personalizado e um modelo de licença para você usar no seu projeto. Deseja isso?
+
