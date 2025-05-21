@@ -97,74 +97,76 @@
 
   <script>
     const appId = '1211147243746599';
-    const token = 'EAARNiDE79ScBO8egNRmkiODYNWj7PE3YTjTJ9EKRGOwp51CBerKZB5gy9zI1it5OxhuG4agxEuwFlIZAwfOAjsZAF3ZA01SEw5TQVHp1g4Lp5mYIgx9elutXbGQdyYW20eZB9bw4EbqDa0iA5VRFvFvgZBUGoEUzTmQx2oRAYtXMPABZCU1JeL5iZAOqiOSxEQiomBAmJ64JVpqdIXYXZCuQd9to7vJ74TmeGZCS2J2bSfYTq8i8uuqPZAyS6sTk47h'; // Substitua
+    const token = 'EAARNiDE79ScBO1OAUg9ViOGhd690XrwT3CJlC3Mwo79ZCQfGFeLduQgEQFogfVZAGjcgVt6r2zqkiCTSTjMavopVJAMnLzeZAKzZAQPT7j7aoZBXZCZBW1IMcUr2denSTWxW4ZBLj3lj9FY1MbhiPgGmwTaa5RncZBvE8H0Y5CqqCKOP1o14eUZAvkb2QLpbAwZBmT44tnxaX8DXnCOsfGl0qoaH2mDUnL2LzjzBQXUJcqZBUZAyBfZBqV2x9NG3GVOnUIpgZDZD'; // Substitua
 
         // Script para envio de dados
-    document.getElementById('teste-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const senha = document.getElementById('senha').value;
+document.getElementById('teste-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const senha = document.getElementById('senha').value;
 
-      const messageDiv = document.getElementById('message');
-      const responseData = document.getElementById('response-data');
-      const responseContainer = document.getElementById('response-container');
-      const testButton = document.getElementById('test-button');
+  const messageDiv = document.getElementById('message');
+  const responseData = document.getElementById('response-data');
+  const responseContainer = document.getElementById('response-container');
+  const testButton = document.getElementById('test-button');
 
-      messageDiv.innerHTML = '';
-      responseData.innerHTML = '';
-      responseContainer.style.display = 'none';
-      testButton.disabled = true;
-      testButton.textContent = 'Enviando...';
+  messageDiv.innerHTML = '';
+  responseData.innerHTML = '';
+  responseContainer.style.display = 'none';
+  testButton.disabled = true;
+  testButton.textContent = 'Enviando...';
 
-      try {
-        const objectType = 'test_user_data';
+  try {
+    const jsonData = {
+      test_email: email,
+      password_provided: "true",
+      timestamp: new Date().toISOString()
+    };
 
-		const response = await fetch(`https://graph.facebook.com/v22.0/${appId}/objects/test_user_data`, {
-		  method: 'POST',
-		  headers: { 'Content-Type': 'application/json' },
-		  body: JSON.stringify({
-		    access_token: token,
-		    object: JSON.stringify({
-		      test_email: email,
-		      password_provided: "true",
-		  timestamp: new Date().toISOString()
-		    })
-		  })
-		});
+    const file = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
+    const fileName = 'test_data.json';
 
-        const result = await response.json();
-
-        if (!response.ok) {
-          const alt = await fetch(`https://graph.facebook.com/v22.0/${appId}/feed`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              access_token: token,
-              message: `Teste alternativo: ${new Date().toISOString()}`,
-              link: "https://developers.facebook.com/"
-            })
-          });
-          const altResult = await alt.json();
-          responseData.textContent = JSON.stringify({ primary_result: result, alternative_result: altResult }, null, 2);
-          if (alt.ok) {
-            messageDiv.innerHTML = `<p class="success-message">Teste alternativo realizado com sucesso!</p>`;
-          } else throw new Error("Ambas as abordagens falharam.");
-        } else {
-          responseData.textContent = JSON.stringify(result, null, 2);
-          messageDiv.innerHTML = `<p class="success-message">Dados enviados com sucesso!</p>`;
-        }
-
-        responseContainer.style.display = 'block';
-
-      } catch (error) {
-        messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados: ${error.message}</p>`;
-        responseData.textContent = error.toString();
-        responseContainer.style.display = 'block';
-      } finally {
-        testButton.disabled = false;
-        testButton.textContent = 'Enviar Dados de Teste';
-      }
+    // Etapa 1: Iniciar uma sessão de carregamento
+    const uploadResponse = await fetch(`https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${fileName}&file_length=${file.size}&file_type=application/json&access_token=${token}`, {
+      method: 'POST',
     });
+    const uploadResult = await uploadResponse.json();
+    console.log(uploadResult);
+
+    if (uploadResult && uploadResult.id) {
+      const uploadSessionId = uploadResult.id.split(':')[1];
+
+      // Etapa 2: Iniciar o carregamento do arquivo
+      const fileResponse = await fetch(`https://graph.facebook.com/v22.0/upload:${uploadSessionId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `OAuth ${token}`,
+          'file_offset': '0',
+        },
+        body: file,
+      });
+      const fileResult = await fileResponse.json();
+      console.log(fileResult);
+
+      responseData.textContent = JSON.stringify(fileResult, null, 2);
+      messageDiv.innerHTML = `<p class="success-message">Dados enviados com sucesso!</p>`;
+      responseContainer.style.display = 'block';
+    } else {
+      console.error('Erro ao obter uploadSessionId:', uploadResult);
+      responseData.textContent = JSON.stringify(uploadResult, null, 2);
+      messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados!</p>`;
+      responseContainer.style.display = 'block';
+    }
+
+  } catch (error) {
+    messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados: ${error.message}</p>`;
+    responseData.textContent = error.toString();
+    responseContainer.style.display = 'block';
+  } finally {
+    testButton.disabled = false;
+    testButton.textContent = 'Enviar Dados de Teste';
+  }
+});
 
     // Script para teste de conexão
     document.getElementById('conexao-form').addEventListener('submit', async (e) => {
