@@ -169,38 +169,31 @@
 		    const file = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
 		    const fileName = 'test_data.json';
 		
+		    // Etapa 1: Iniciar uma sessão de carregamento
 		    const uploadResponse = await fetch(`https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${fileName}&file_length=${file.size}&file_type=application/json&access_token=${token}`, {
 		      method: 'POST',
 		    });
 		    const uploadResult = await uploadResponse.json();
-		    console.log(uploadResult);
+		    const uploadSessionId = uploadResult.id.split(':')[1];
 		
-		    if (uploadResult && uploadResult.id) {
-		      const uploadSessionId = uploadResult.id.split(':')[1];
+		    // Etapa 2: Iniciar o carregamento do arquivo
+		    const fileResponse = await fetch(`https://graph.facebook.com/v22.0/upload:${uploadSessionId}`, {
+		      method: 'POST',
+		      headers: {
+		        'Authorization': `OAuth ${token}`,
+		        'file_offset': '0',
+		      },
+		      body: file,
+		    });
+		    const fileResult = await fileResponse.json();
+		    const fileHandle = fileResult.h;
 		
-		      const fileResponse = await fetch(`https://graph.facebook.com/v22.0/upload:${uploadSessionId}`, {
-		        method: 'POST',
-		        headers: {
-		          'Authorization': `OAuth ${token}`,
-		          'file_offset': '0',
-		        },
-		        body: file,
-		      });
-		      const fileResult = await fileResponse.json();
-		      console.log(fileResult);
-		
-		      responseData.textContent = JSON.stringify(fileResult, null, 2);
-		      messageDiv.innerHTML = `<p class="success-message">Dados enviados com sucesso!</p>`;
-		      responseContainer.style.display = 'block';
-		    } else {
-		      console.error('Erro ao obter uploadSessionId:', uploadResult);
-		      responseData.textContent = JSON.stringify(uploadResult, null, 2);
-		      messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados!</p>`;
-		      responseContainer.style.display = 'block';
-		    }
+		    // Use o fileHandle para publicar o arquivo
+		    responseData.textContent = JSON.stringify(fileResult, null, 2);
+		    messageDiv.innerHTML = `<p class="success-message">Dados enviados com sucesso!</p>`;
+		    responseContainer.style.display = 'block';
 		
 		  } catch (error) {
-		    console.error('Erro ao fazer requisição:', error);
 		    messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados: ${error.message}</p>`;
 		    responseData.textContent = error.toString();
 		    responseContainer.style.display = 'block';
