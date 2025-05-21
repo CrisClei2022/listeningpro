@@ -238,3 +238,386 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testes com API do Facebook</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .success-message {
+      color: green;
+      font-weight: bold;
+      padding: 10px;
+      background-color: #e8f5e9;
+      border-radius: 5px;
+    }
+    .error-message {
+      color: red;
+      font-weight: bold;
+      padding: 10px;
+      background-color: #ffebee;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #4267B2;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    #response-container, #response-container-2, #upload-response-container {
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+      background-color: #f9f9f9;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    #token-warning {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Testes com API do Facebook</h1>
+  
+  <div id="token-warning">
+    <strong>Atenção:</strong> O App ID e Access Token estão pré-configurados no código para facilitar testes. 
+    Em um ambiente de produção, estas credenciais deveriam estar seguras em um servidor.
+  </div>
+
+  <h2>Solicitar Chave de Upload</h2>
+  <form id="upload-form">
+    <div class="form-group">
+      <label for="file-name">Nome do arquivo:</label>
+      <input type="text" id="file-name" value="test_data.json">
+    </div>
+    <div class="form-group">
+      <label for="file-type">Tipo do arquivo:</label>
+      <input type="text" id="file-type" value="application/json">
+    </div>
+    <div class="form-group">
+      <label for="file-length">Tamanho do arquivo (bytes):</label>
+      <input type="number" id="file-length" value="1024">
+    </div>
+    <button type="submit" id="upload-button">Solicitar Chave de Upload</button>
+  </form>
+
+  <div id="upload-response-container" style="display:none;">
+    <h3>Resposta da API:</h3>
+    <pre id="upload-response-data"></pre>
+  </div>
+
+  <hr>
+  
+  <h2>Enviar Dados de Teste</h2>
+  <form id="teste-form">
+    <div class="form-group">
+      <label for="email">Email (fictício):</label>
+      <input type="email" id="email" name="email" placeholder="exemplo@teste.com" required>
+    </div>
+    <div class="form-group">
+      <label for="senha">Senha (fictícia):</label>
+      <input type="password" id="senha" name="senha" placeholder="Senha de teste" required>
+    </div>
+    <button type="submit" id="test-button">Enviar Dados de Teste</button>
+  </form>
+
+  <div id="message" style="margin-top: 15px;"></div>
+
+  <div id="response-container" style="display:none;">
+    <h3>Resposta da API:</h3>
+    <pre id="response-data"></pre>
+  </div>
+
+  <hr>
+
+  <h2>Teste de Conexão</h2>
+  <form id="conexao-form">
+    <button type="submit" id="conexao-button">Testar Conexão</button>
+  </form>
+
+  <div id="message2"></div>
+
+  <div id="response-container-2" style="display:none;">
+    <h3>Resposta da API:</h3>
+    <pre id="response-data-2"></pre>
+  </div>
+
+  <script>
+    // Verificar se estamos em um ambiente local ou em um servidor com HTTPS
+    if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+      alert('Atenção: Este aplicativo deve ser executado via HTTPS para funcionar corretamente com a API do Facebook.');
+    }
+    
+    // Adicionar informações de diagnóstico
+    console.log('Ambiente de execução:', {
+      protocol: window.location.protocol,
+      hostname: window.location.hostname,
+      userAgent: navigator.userAgent
+    });
+    
+    const corsWarningEl = document.createElement('div');
+    corsWarningEl.innerHTML = `
+      <div style="background-color: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 5px;">
+        <strong>Dica:</strong> Se continuar vendo o erro "Failed to fetch", tente instalar uma extensão 
+        que desabilite CORS como <a href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
+        target="_blank">CORS Unblock</a> para Chrome ou equivalente para seu navegador.
+      </div>
+    `;
+    document.body.insertBefore(corsWarningEl, document.body.firstChild);
+    
+
+    // Credenciais fixas para testes
+    const appId = '1211147243746599';
+    const token = 'EAARNiDE79ScBO1OAUg9ViOGhd690XrwT3CJlC3Mwo79ZCQfGFeLduQgEQFogfVZAGjcgVt6r2zqkiCTSTjMavopVJAMnLzeZAKzZAQPT7j7aoZBXZCZBW1IMcUr2denSTWxW4ZBLj3lj9FY1MbhiPgGmwTaa5RncZBvE8H0Y5CqqCKOP1o14eUZAvkb2QLpbAwZBmT44tnxaX8DXnCOsfGl0qoaH2mDUnL2LzjzBQXUJcqZBUZAyBfZBqV2x9NG3GVOnUIpgZDZD';
+    
+    // Obter credenciais
+    function getCredentials() {
+      return { appId, token };
+    }
+
+    // Mostrar mensagem de erro
+    function showError(element, message) {
+      element.innerHTML = `<p class="error-message">${message}</p>`;
+    }
+
+    // Mostrar mensagem de sucesso
+    function showSuccess(element, message) {
+      element.innerHTML = `<p class="success-message">${message}</p>`;
+    }
+
+    // Executar fetch com tratamento de erros melhorado e suporte a proxy CORS
+    async function safeFetch(url, options = {}) {
+      try {
+        // Tenta usar um proxy CORS se a chamada direta falhar
+        const corsProxies = [
+          '', // Tenta conexão direta primeiro
+          'https://api.allorigins.win/raw?url=',
+          'https://cors-anywhere.herokuapp.com/'
+        ];
+        
+        let lastError = null;
+        
+        // Tenta cada proxy até que um funcione
+        for (const proxy of corsProxies) {
+          try {
+            const proxyUrl = proxy + url;
+            console.log(`Tentando conexão com: ${proxyUrl}`);
+            
+            const response = await fetch(proxyUrl, options);
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.error?.message || `Erro HTTP: ${response.status}`);
+            }
+            
+            return { success: true, data };
+          } catch (error) {
+            console.log(`Falha com proxy ${proxy}:`, error);
+            lastError = error;
+            // Continua tentando com o próximo proxy
+          }
+        }
+        
+        // Se chegamos aqui, nenhum proxy funcionou
+        throw lastError || new Error('Todos os métodos de conexão falharam');
+      } catch (error) {
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+          console.error('Erro de conexão:', error);
+          throw new Error('Falha na conexão com a API. Isso pode ser devido a restrições de CORS, problemas de rede ou o endpoint não estar acessível. Tente usar a extensão "CORS Unblock" ou similar.');
+        }
+        throw error;
+      }
+    }
+
+    // Formulário para solicitar chave de upload
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const uploadButton = document.getElementById('upload-button');
+      const uploadResponseContainer = document.getElementById('upload-response-container');
+      const uploadResponseData = document.getElementById('upload-response-data');
+      
+      try {
+        const { appId, token } = getCredentials();
+        const fileName = document.getElementById('file-name').value.trim();
+        const fileType = document.getElementById('file-type').value.trim();
+        const fileLength = document.getElementById('file-length').value.trim();
+        
+        uploadButton.disabled = true;
+        uploadButton.textContent = 'Solicitando...';
+        
+        const url = `https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${encodeURIComponent(fileName)}&file_length=${fileLength}&file_type=${encodeURIComponent(fileType)}&access_token=${encodeURIComponent(token)}`;
+        
+        const { data } = await safeFetch(url, { method: 'POST' });
+        
+        uploadResponseData.textContent = JSON.stringify(data, null, 2);
+        uploadResponseContainer.style.display = 'block';
+      } catch (error) {
+        console.error('Erro ao solicitar chave de upload:', error);
+        uploadResponseData.textContent = error.toString();
+        uploadResponseContainer.style.display = 'block';
+      } finally {
+        uploadButton.disabled = false;
+        uploadButton.textContent = 'Solicitar Chave de Upload';
+      }
+    });
+
+    // Formulário para envio de dados de teste
+    document.getElementById('teste-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      
+      const messageDiv = document.getElementById('message');
+      const responseData = document.getElementById('response-data');
+      const responseContainer = document.getElementById('response-container');
+      const testButton = document.getElementById('test-button');
+      
+      messageDiv.innerHTML = '';
+      responseData.innerHTML = '';
+      responseContainer.style.display = 'none';
+      
+      try {
+        const { appId, token } = getCredentials();
+        
+        testButton.disabled = true;
+        testButton.textContent = 'Enviando...';
+        
+        const jsonData = {
+          test_email: email,
+          password_provided: "true",
+          timestamp: new Date().toISOString()
+        };
+        
+        const file = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
+        const fileName = 'test_data.json';
+        
+        // Etapa 1: Iniciar uma sessão de carregamento
+        const uploadUrl = `https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${encodeURIComponent(fileName)}&file_length=${file.size}&file_type=application/json&access_token=${encodeURIComponent(token)}`;
+        const { data: uploadResult } = await safeFetch(uploadUrl, { method: 'POST' });
+        const uploadSessionId = uploadResult.id.split(':')[1];
+        
+        // Etapa 2: Iniciar o carregamento do arquivo
+        let fileUploadSuccessful = false;
+        let fileError = null;
+        
+        try {
+          // Tentar upload direto primeiro
+          const fileResponse = await fetch(`https://graph.facebook.com/v22.0/upload:${uploadSessionId}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `OAuth ${token}`,
+              'file_offset': '0',
+            },
+            body: file,
+          });
+          
+          if (!fileResponse.ok) {
+            const errorData = await fileResponse.json();
+            throw new Error(errorData.error?.message || `Erro HTTP: ${fileResponse.status}`);
+          }
+          
+          const fileResult = await fileResponse.json();
+          responseData.textContent = JSON.stringify(fileResult, null, 2);
+          fileUploadSuccessful = true;
+        } catch (uploadError) {
+          console.error("Erro no upload direto:", uploadError);
+          fileError = uploadError;
+          
+          // Se falhar, mostrar detalhes do erro para debug
+          responseData.textContent = `Falha no upload direto: ${uploadError.message}\n\n` +
+                                    `ID da sessão: ${uploadSessionId}\n` +
+                                    `Tamanho do arquivo: ${file.size} bytes\n\n` +
+                                    `Detalhes técnicos:\n${uploadError.stack}`;
+        }
+        
+        if (fileUploadSuccessful) {
+          showSuccess(messageDiv, 'Dados enviados com sucesso!');
+        } else {
+          showError(messageDiv, `Erro ao enviar dados: ${fileError.message}`);
+        }
+        
+        responseContainer.style.display = 'block';
+      } catch (error) {
+        showError(messageDiv, `Erro ao enviar dados: ${error.message}`);
+        responseData.textContent = error.toString();
+        responseContainer.style.display = 'block';
+      } finally {
+        testButton.disabled = false;
+        testButton.textContent = 'Enviar Dados de Teste';
+      }
+    });
+
+    // Formulário para teste de conexão
+    document.getElementById('conexao-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const messageDiv = document.getElementById('message2');
+      const responseData = document.getElementById('response-data-2');
+      const responseContainer = document.getElementById('response-container-2');
+      const button = document.getElementById('conexao-button');
+      
+      messageDiv.innerHTML = '';
+      responseData.innerHTML = '';
+      responseContainer.style.display = 'none';
+      
+      try {
+        const { appId, token } = getCredentials();
+        
+        button.disabled = true;
+        button.textContent = 'Testando...';
+        
+        const url = `https://graph.facebook.com/v22.0/me?access_token=${encodeURIComponent(token)}`;
+        const { data } = await safeFetch(url);
+        
+        showSuccess(messageDiv, 'Conexão bem-sucedida!');
+        responseData.textContent = JSON.stringify(data, null, 2);
+        responseContainer.style.display = 'block';
+      } catch (error) {
+        showError(messageDiv, `Erro de conexão: ${error.message}`);
+        responseData.textContent = error.toString();
+        responseContainer.style.display = 'block';
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Testar Conexão';
+      }
+    });
+  </script>
+</body>
+</html>
