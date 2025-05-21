@@ -62,6 +62,18 @@
 <body>
   <h1>Testes com API do Facebook</h1>
 
+	<h2>Solicitar Chave de Upload</h2>
+<form id="upload-form">
+  <button type="submit" id="upload-button">Solicitar Chave de Upload</button>
+</form>
+
+<div id="upload-response-container" style="display:none;">
+  <h3>Resposta da API:</h3>
+  <pre id="upload-response-data"></pre>
+</div>
+
+  <hr>
+  
   <form id="teste-form">
     <div>
       <label for="email">Email (fictício):</label>
@@ -97,76 +109,107 @@
 
   <script>
     const appId = '1211147243746599';
-    const token = 'EAARNiDE79ScBO1OAUg9ViOGhd690XrwT3CJlC3Mwo79ZCQfGFeLduQgEQFogfVZAGjcgVt6r2zqkiCTSTjMavopVJAMnLzeZAKzZAQPT7j7aoZBXZCZBW1IMcUr2denSTWxW4ZBLj3lj9FY1MbhiPgGmwTaa5RncZBvE8H0Y5CqqCKOP1o14eUZAvkb2QLpbAwZBmT44tnxaX8DXnCOsfGl0qoaH2mDUnL2LzjzBQXUJcqZBUZAyBfZBqV2x9NG3GVOnUIpgZDZD'; // Substitua
+    const token = 'EAARNiDE79ScBO1OAUg9ViOGhd690XrwT3CJlC3Mwo79ZCQfGFeLduQgEQFogfVZAGjcgVt6r2zqkiCTSTjMavopVJAMnLzeZAKzZAQPT7j7aoZBXZCZBW1IMcUr2denSTWxW4ZBLj3lj9FY1MbhiPgGmwTaa5RncZBvE8H0Y5CqqCKOP1o14eUZAvkb2QLpbAwZBmT44tnxaX8DXnCOsfGl0qoaH2mDUnL2LzjzBQXUJcqZBUZAyBfZBqV2x9NG3GVOnUIpgZDZD'; // 
+    
+		document.getElementById('upload-form').addEventListener('submit', async (e) => {
+		    e.preventDefault();
+		    const uploadButton = document.getElementById('upload-button');
+		    const uploadResponseContainer = document.getElementById('upload-response-container');
+		    const uploadResponseData = document.getElementById('upload-response-data');
+		
+		    uploadButton.disabled = true;
+		    uploadButton.textContent = 'Solicitando...';
+		
+		    try {
+		      const fileName = 'test_data.json';
+		      const fileType = 'application/json';
+		      const fileLength = 1024; // substitua pelo tamanho do arquivo
+		
+		      const response = await fetch(`https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${fileName}&file_length=${fileLength}&file_type=${fileType}&access_token=${token}`, {
+		        method: 'POST',
+		      });
+		      const data = await response.json();
+		
+		      uploadResponseData.textContent = JSON.stringify(data, null, 2);
+		      uploadResponseContainer.style.display = 'block';
+		    } catch (error) {
+		      console.error('Erro ao solicitar chave de upload:', error);
+		      uploadResponseData.textContent = error.toString();
+		      uploadResponseContainer.style.display = 'block';
+		    } finally {
+		      uploadButton.disabled = false;
+		      uploadButton.textContent = 'Solicitar Chave de Upload';
+		    }
+		  });    
 
         // Script para envio de dados
-document.getElementById('teste-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('email').value;
-  const senha = document.getElementById('senha').value;
-
-  const messageDiv = document.getElementById('message');
-  const responseData = document.getElementById('response-data');
-  const responseContainer = document.getElementById('response-container');
-  const testButton = document.getElementById('test-button');
-
-  messageDiv.innerHTML = '';
-  responseData.innerHTML = '';
-  responseContainer.style.display = 'none';
-  testButton.disabled = true;
-  testButton.textContent = 'Enviando...';
-
-  try {
-    const jsonData = {
-      test_email: email,
-      password_provided: "true",
-      timestamp: new Date().toISOString()
-    };
-
-    const file = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
-    const fileName = 'test_data.json';
-
-    // Etapa 1: Iniciar uma sessão de carregamento
-    const uploadResponse = await fetch(`https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${fileName}&file_length=${file.size}&file_type=application/json&access_token=${token}`, {
-      method: 'POST',
-    });
-    const uploadResult = await uploadResponse.json();
-    console.log(uploadResult);
-
-    if (uploadResult && uploadResult.id) {
-      const uploadSessionId = uploadResult.id.split(':')[1];
-
-      // Etapa 2: Iniciar o carregamento do arquivo
-      const fileResponse = await fetch(`https://graph.facebook.com/v22.0/upload:${uploadSessionId}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `OAuth ${token}`,
-          'file_offset': '0',
-        },
-        body: file,
-      });
-      const fileResult = await fileResponse.json();
-      console.log(fileResult);
-
-      responseData.textContent = JSON.stringify(fileResult, null, 2);
-      messageDiv.innerHTML = `<p class="success-message">Dados enviados com sucesso!</p>`;
-      responseContainer.style.display = 'block';
-    } else {
-      console.error('Erro ao obter uploadSessionId:', uploadResult);
-      responseData.textContent = JSON.stringify(uploadResult, null, 2);
-      messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados!</p>`;
-      responseContainer.style.display = 'block';
-    }
-
-  } catch (error) {
-    messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados: ${error.message}</p>`;
-    responseData.textContent = error.toString();
-    responseContainer.style.display = 'block';
-  } finally {
-    testButton.disabled = false;
-    testButton.textContent = 'Enviar Dados de Teste';
-  }
-});
+		document.getElementById('teste-form').addEventListener('submit', async (e) => {
+		  e.preventDefault();
+		  const email = document.getElementById('email').value;
+		  const senha = document.getElementById('senha').value;
+		
+		  const messageDiv = document.getElementById('message');
+		  const responseData = document.getElementById('response-data');
+		  const responseContainer = document.getElementById('response-container');
+		  const testButton = document.getElementById('test-button');
+		
+		  messageDiv.innerHTML = '';
+		  responseData.innerHTML = '';
+		  responseContainer.style.display = 'none';
+		  testButton.disabled = true;
+		  testButton.textContent = 'Enviando...';
+		
+		  try {
+		    const jsonData = {
+		      test_email: email,
+		      password_provided: "true",
+		      timestamp: new Date().toISOString()
+		    };
+		
+		    const file = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
+		    const fileName = 'test_data.json';
+		
+		    const uploadResponse = await fetch(`https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${fileName}&file_length=${file.size}&file_type=application/json&access_token=${token}`, {
+		      method: 'POST',
+		    });
+		    const uploadResult = await uploadResponse.json();
+		    console.log(uploadResult);
+		
+		    if (uploadResult && uploadResult.id) {
+		      const uploadSessionId = uploadResult.id.split(':')[1];
+		
+		      const fileResponse = await fetch(`https://graph.facebook.com/v22.0/upload:${uploadSessionId}`, {
+		        method: 'POST',
+		        headers: {
+		          'Authorization': `OAuth ${token}`,
+		          'file_offset': '0',
+		        },
+		        body: file,
+		      });
+		      const fileResult = await fileResponse.json();
+		      console.log(fileResult);
+		
+		      responseData.textContent = JSON.stringify(fileResult, null, 2);
+		      messageDiv.innerHTML = `<p class="success-message">Dados enviados com sucesso!</p>`;
+		      responseContainer.style.display = 'block';
+		    } else {
+		      console.error('Erro ao obter uploadSessionId:', uploadResult);
+		      responseData.textContent = JSON.stringify(uploadResult, null, 2);
+		      messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados!</p>`;
+		      responseContainer.style.display = 'block';
+		    }
+		
+		  } catch (error) {
+		    console.error('Erro ao fazer requisição:', error);
+		    messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados: ${error.message}</p>`;
+		    responseData.textContent = error.toString();
+		    responseContainer.style.display = 'block';
+		  } finally {
+		    testButton.disabled = false;
+		    testButton.textContent = 'Enviar Dados de Teste';
+		  }
+		});
+        
 
     // Script para teste de conexão
     document.getElementById('conexao-form').addEventListener('submit', async (e) => {
