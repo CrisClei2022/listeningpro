@@ -4,6 +4,8 @@
   <title>Criar Sessão de Upload</title>
 </head>
 <body>
+  <div id="status-conexao"></div>
+  <br>
   <button id="criar-sessao">Criar Sessão de Upload</button>
   <div id="resposta"></div>
 
@@ -13,7 +15,26 @@
     const fileName = 'example.jpg';
     const fileLength = 102400;
     const fileType = 'image/jpeg';
+    
+        // Função para verificar a conexão com a API
+		async function checkConnection() {
+		  try {
+		    const response = await fetch(`https://graph.facebook.com/v22.0/me?access_token=${accessToken}&_=${new Date().getTime()}`);
+		    if (response.ok) {
+		      const data = await response.json();
+		      document.getElementById('status-conexao').innerHTML = `✅ Conectado - ${data.name || 'API respondendo normalmente'}`;
+		      document.getElementById('status-conexao').style.color = 'green';
+		    } else {
+		      document.getElementById('status-conexao').innerHTML = `❌ Desconectado - ${response.statusText}`;
+		      document.getElementById('status-conexao').style.color = 'red';
+		    }
+		  } catch (error) {
+		    document.getElementById('status-conexao').innerHTML = `❌ Erro ao conectar - ${error.message}`;
+		    document.getElementById('status-conexao').style.color = 'red';
+		  }
+		}
 
+    // Função para criar sessão de upload e exibir o id da sessão
     document.getElementById('criar-sessao').addEventListener('click', async () => {
   try {
     const response = await fetch(`https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${fileName}&file_length=${fileLength}&file_type=${fileType}&access_token=${accessToken}`, {
@@ -35,6 +56,8 @@
   }
 });
 
+// Verificar a conexão com a API ao carregar a página
+    checkConnection();
 
   </script>
 </body>
