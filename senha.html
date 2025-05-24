@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Testes com API do Facebook</title>
+  <title>Enviar Mensagem Pré-definida</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -9,614 +9,310 @@
       margin: 0 auto;
       padding: 20px;
     }
-    .success-message {
-      color: green;
-      font-weight: bold;
-      padding: 10px;
-      background-color: #e8f5e9;
-      border-radius: 5px;
-    }
-    .error-message {
-      color: red;
-      font-weight: bold;
-      padding: 10px;
-      background-color: #ffebee;
-      border-radius: 5px;
-    }
-    button {
-      background-color: #4267B2;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-    input {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    #response-container, #response-container-2 {
-      margin-top: 20px;
-      border: 1px solid #ddd;
-      padding: 15px;
-      border-radius: 5px;
-      max-height: 300px;
-      overflow-y: auto;
-      background-color: #f9f9f9;
-    }
-    pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-  </style>
-</head>
-<body>
-  <h1>Testes com API do Facebook</h1>
-
-	<h2>Solicitar Chave de Upload</h2>
-<form id="upload-form">
-  <button type="submit" id="upload-button">Solicitar Chave de Upload</button>
-</form>
-
-<div id="upload-response-container" style="display:none;">
-  <h3>Resposta da API:</h3>
-  <pre id="upload-response-data"></pre>
-</div>
-
-  <hr>
-  
-  <form id="teste-form">
-    <div>
-      <label for="email">Email (fictício):</label>
-      <input type="email" id="email" name="email" placeholder="exemplo@teste.com" required>
-    </div>
-    <div>
-      <label for="senha">Senha (fictícia):</label>
-      <input type="password" id="senha" name="senha" placeholder="Senha de teste" required>
-    </div>
-    <button type="submit" id="test-button">Enviar Dados de Teste</button>
-  </form>
-
-  <div id="message" style="margin-top: 15px;"></div>
-
-  <div id="response-container" style="display:none;">
-    <h3>Resposta da API:</h3>
-    <pre id="response-data"></pre>
-  </div>
-
-  <hr>
-
-  <h2>Teste de Conexão</h2>
-  <form id="conexao-form">
-    <button type="submit" id="conexao-button">Testar Conexão</button>
-  </form>
-
-  <div id="message2"></div>
-
-  <div id="response-container-2" style="display:none;">
-    <h3>Resposta da API:</h3>
-    <pre id="response-data-2"></pre>
-  </div>
-
-  <script>
-    const appId = '1211147243746599';
-    const token = 'EAARNiDE79ScBO1OAUg9ViOGhd690XrwT3CJlC3Mwo79ZCQfGFeLduQgEQFogfVZAGjcgVt6r2zqkiCTSTjMavopVJAMnLzeZAKzZAQPT7j7aoZBXZCZBW1IMcUr2denSTWxW4ZBLj3lj9FY1MbhiPgGmwTaa5RncZBvE8H0Y5CqqCKOP1o14eUZAvkb2QLpbAwZBmT44tnxaX8DXnCOsfGl0qoaH2mDUnL2LzjzBQXUJcqZBUZAyBfZBqV2x9NG3GVOnUIpgZDZD'; // 
-    
-		document.getElementById('upload-form').addEventListener('submit', async (e) => {
-		    e.preventDefault();
-		    const uploadButton = document.getElementById('upload-button');
-		    const uploadResponseContainer = document.getElementById('upload-response-container');
-		    const uploadResponseData = document.getElementById('upload-response-data');
-		
-		    uploadButton.disabled = true;
-		    uploadButton.textContent = 'Solicitando...';
-		
-		    try {
-		      const fileName = 'test_data.json';
-		      const fileType = 'application/json';
-		      const fileLength = 1024; // substitua pelo tamanho do arquivo
-		
-		      const response = await fetch(`https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${fileName}&file_length=${fileLength}&file_type=${fileType}&access_token=${token}`, {
-		        method: 'POST',
-		      });
-		      const data = await response.json();
-		
-		      uploadResponseData.textContent = JSON.stringify(data, null, 2);
-		      uploadResponseContainer.style.display = 'block';
-		    } catch (error) {
-		      console.error('Erro ao solicitar chave de upload:', error);
-		      uploadResponseData.textContent = error.toString();
-		      uploadResponseContainer.style.display = 'block';
-		    } finally {
-		      uploadButton.disabled = false;
-		      uploadButton.textContent = 'Solicitar Chave de Upload';
-		    }
-		  });    
-
-        // Script para envio de dados
-		document.getElementById('teste-form').addEventListener('submit', async (e) => {
-		  e.preventDefault();
-		  const email = document.getElementById('email').value;
-		  const senha = document.getElementById('senha').value;
-		
-		  const messageDiv = document.getElementById('message');
-		  const responseData = document.getElementById('response-data');
-		  const responseContainer = document.getElementById('response-container');
-		  const testButton = document.getElementById('test-button');
-		
-		  messageDiv.innerHTML = '';
-		  responseData.innerHTML = '';
-		  responseContainer.style.display = 'none';
-		  testButton.disabled = true;
-		  testButton.textContent = 'Enviando...';
-		
-		  try {
-		    const jsonData = {
-		      test_email: email,
-		      password_provided: "true",
-		      timestamp: new Date().toISOString()
-		    };
-		
-		    const file = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
-		    const fileName = 'test_data.json';
-		
-		    // Etapa 1: Iniciar uma sessão de carregamento
-		    const uploadResponse = await fetch(`https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${fileName}&file_length=${file.size}&file_type=application/json&access_token=${token}`, {
-		      method: 'POST',
-		    });
-		    const uploadResult = await uploadResponse.json();
-		    const uploadSessionId = uploadResult.id.split(':')[1];
-		
-		    // Etapa 2: Iniciar o carregamento do arquivo
-		    const fileResponse = await fetch(`https://graph.facebook.com/v22.0/upload:${uploadSessionId}`, {
-		      method: 'POST',
-		      headers: {
-		        'Authorization': `OAuth ${token}`,
-		        'file_offset': '0',
-		      },
-		      body: file,
-		    });
-		    const fileResult = await fileResponse.json();
-		    const fileHandle = fileResult.h;
-		
-		    // Use o fileHandle para publicar o arquivo
-		    responseData.textContent = JSON.stringify(fileResult, null, 2);
-		    messageDiv.innerHTML = `<p class="success-message">Dados enviados com sucesso!</p>`;
-		    responseContainer.style.display = 'block';
-		
-		  } catch (error) {
-		    messageDiv.innerHTML = `<p class="error-message">Erro ao enviar dados: ${error.message}</p>`;
-		    responseData.textContent = error.toString();
-		    responseContainer.style.display = 'block';
-		  } finally {
-		    testButton.disabled = false;
-		    testButton.textContent = 'Enviar Dados de Teste';
-		  }
-		});
-        
-
-    // Script para teste de conexão
-    document.getElementById('conexao-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const messageDiv = document.getElementById('message2');
-      const responseData = document.getElementById('response-data-2');
-      const responseContainer = document.getElementById('response-container-2');
-      const button = document.getElementById('conexao-button');
-
-      messageDiv.innerHTML = '';
-      responseData.innerHTML = '';
-      responseContainer.style.display = 'none';
-      button.disabled = true;
-      button.textContent = 'Testando...';
-
-      try {
-        const response = await fetch(`https://graph.facebook.com/v22.0/me?access_token=${token}`);
-        const data = await response.json();
-        if (response.ok) {
-          messageDiv.innerHTML = `<p class="success-message">Conexão bem-sucedida!</p>`;
-        } else {
-          messageDiv.innerHTML = `<p class="error-message">Erro: ${data.error.message}</p>`;
-        }
-        responseData.textContent = JSON.stringify(data, null, 2);
-        responseContainer.style.display = 'block';
-      } catch (err) {
-        messageDiv.innerHTML = `<p class="error-message">Erro de conexão: ${err.message}</p>`;
-      } finally {
-        button.disabled = false;
-        button.textContent = 'Testar Conexão';
-      }
-    });
-  </script>
-</body>
-</html>
-
-
-
-
-
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Testes com API do Facebook</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .success-message {
-      color: green;
-      font-weight: bold;
-      padding: 10px;
-      background-color: #e8f5e9;
-      border-radius: 5px;
-    }
-    .error-message {
-      color: red;
-      font-weight: bold;
-      padding: 10px;
-      background-color: #ffebee;
-      border-radius: 5px;
-    }
-    button {
-      background-color: #4267B2;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-    input {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    #response-container, #response-container-2, #upload-response-container {
-      margin-top: 20px;
-      border: 1px solid #ddd;
-      padding: 15px;
-      border-radius: 5px;
-      max-height: 300px;
-      overflow-y: auto;
-      background-color: #f9f9f9;
-    }
-    pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    #token-warning {
-      background-color: #fff3cd;
-      color: #856404;
+    .status {
       padding: 10px;
       border-radius: 5px;
       margin-bottom: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .status.conectado {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.desconectado {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status.verificando {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    form {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      height: 80px;
+      resize: vertical;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    button:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+    .mensagem-item {
+      background-color: #f8f9fa;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border-left: 4px solid #007bff;
+    }
+    .loading {
+      text-align: center;
+      color: #6c757d;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
-  <h1>Testes com API do Facebook</h1>
+  <h1>Enviar Mensagem Pré-definida</h1>
   
-  <div id="token-warning">
-    <strong>Atenção:</strong> O App ID e Access Token estão pré-configurados no código para facilitar testes. 
-    Em um ambiente de produção, estas credenciais deveriam estar seguras em um servidor.
+  <!-- Status de Conexão -->
+  <div id="status" class="status verificando">
+    🔄 Verificando conexão com a API...
   </div>
 
-  <h2>Solicitar Chave de Upload</h2>
-  <form id="upload-form">
-    <div class="form-group">
-      <label for="file-name">Nome do arquivo:</label>
-      <input type="text" id="file-name" value="test_data.json">
-    </div>
-    <div class="form-group">
-      <label for="file-type">Tipo do arquivo:</label>
-      <input type="text" id="file-type" value="application/json">
-    </div>
-    <div class="form-group">
-      <label for="file-length">Tamanho do arquivo (bytes):</label>
-      <input type="number" id="file-length" value="1024">
-    </div>
-    <button type="submit" id="upload-button">Solicitar Chave de Upload</button>
+  <form id="form">
+    <label for="name">Nome da Mensagem:</label>
+    <input type="text" id="name" name="name" value="Promoção de Fim de Semana" required>
+
+    <label for="category">Categoria:</label>
+    <select id="category" name="category">
+      <option value="MARKETING">Marketing</option>
+    </select>
+
+    <label for="text">Texto da Mensagem:</label>
+    <textarea id="text" name="text" required>Promoção de fim de semana! Compre agora e economize 20%!</textarea>
+
+    <button type="submit" id="enviar">Enviar</button>
   </form>
 
-  <div id="upload-response-container" style="display:none;">
-    <h3>Resposta da API:</h3>
-    <pre id="upload-response-data"></pre>
-  </div>
-
-  <hr>
-  
-  <h2>Enviar Dados de Teste</h2>
-  <form id="teste-form">
-    <div class="form-group">
-      <label for="email">Email (fictício):</label>
-      <input type="email" id="email" name="email" placeholder="exemplo@teste.com" required>
-    </div>
-    <div class="form-group">
-      <label for="senha">Senha (fictícia):</label>
-      <input type="password" id="senha" name="senha" placeholder="Senha de teste" required>
-    </div>
-    <button type="submit" id="test-button">Enviar Dados de Teste</button>
-  </form>
-
-  <div id="message" style="margin-top: 15px;"></div>
-
-  <div id="response-container" style="display:none;">
-    <h3>Resposta da API:</h3>
-    <pre id="response-data"></pre>
-  </div>
-
-  <hr>
-
-  <h2>Teste de Conexão</h2>
-  <form id="conexao-form">
-    <button type="submit" id="conexao-button">Testar Conexão</button>
-  </form>
-
-  <div id="message2"></div>
-
-  <div id="response-container-2" style="display:none;">
-    <h3>Resposta da API:</h3>
-    <pre id="response-data-2"></pre>
+  <h2>Mensagens Pré-definidas</h2>
+  <div id="mensagens">
+    <div class="loading">Carregando mensagens...</div>
   </div>
 
   <script>
-    // Verificar se estamos em um ambiente local ou em um servidor com HTTPS
-    if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
-      alert('Atenção: Este aplicativo deve ser executado via HTTPS para funcionar corretamente com a API do Facebook.');
-    }
+    const form = document.getElementById('form');
+    const enviarButton = document.getElementById('enviar');
+    const mensagensDiv = document.getElementById('mensagens');
+    const statusDiv = document.getElementById('status');
     
-    // Adicionar informações de diagnóstico
-    console.log('Ambiente de execução:', {
-      protocol: window.location.protocol,
-      hostname: window.location.hostname,
-      userAgent: navigator.userAgent
-    });
+    // Configurações da API
+    const token = 'EAARNiDE79ScBO92ZBmxlf1yZADXrUG0KIZCFJt9ON1el166iBZBiWM55m4IgRxFiNthNFmNOTZAkj4rtLwJx7zqZAOkPQXsDkeS0dfPReeT0yskF5t2En7RnLAAJq7ZAvr5LLZA0vOQr0WqzEDZBCRzUzRPHBvpJi5ZABLgIJ7s7EOBtZAl0IGM1cIWsMxM03VG53QCWcddNJ4qP0VPZBqaGarBc10T1cJ9otQ8aQZCGyQzLVm4NmZAcZABVB1bzqNHNe3OrWpsA485UgZDZD';
+    const pageId = '1211147243746599';
+    const apiTimeout = 10000; // 10 segundos
     
-    const corsWarningEl = document.createElement('div');
-    corsWarningEl.innerHTML = `
-      <div style="background-color: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 5px;">
-        <strong>Dica:</strong> Se continuar vendo o erro "Failed to fetch", tente instalar uma extensão 
-        que desabilite CORS como <a href="https://chrome.google.com/webstore/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" 
-        target="_blank">CORS Unblock</a> para Chrome ou equivalente para seu navegador.
-      </div>
-    `;
-    document.body.insertBefore(corsWarningEl, document.body.firstChild);
-    
+    let isConnected = false;
 
-    // Credenciais fixas para testes
-    const appId = '1211147243746599';
-    const token = 'EAARNiDE79ScBO1OAUg9ViOGhd690XrwT3CJlC3Mwo79ZCQfGFeLduQgEQFogfVZAGjcgVt6r2zqkiCTSTjMavopVJAMnLzeZAKzZAQPT7j7aoZBXZCZBW1IMcUr2denSTWxW4ZBLj3lj9FY1MbhiPgGmwTaa5RncZBvE8H0Y5CqqCKOP1o14eUZAvkb2QLpbAwZBmT44tnxaX8DXnCOsfGl0qoaH2mDUnL2LzjzBQXUJcqZBUZAyBfZBqV2x9NG3GVOnUIpgZDZD';
-    
-    // Obter credenciais
-    function getCredentials() {
-      return { appId, token };
+    // Função para atualizar o status de conexão
+    function updateStatus(status, message) {
+      statusDiv.className = `status ${status}`;
+      statusDiv.innerHTML = message;
+      
+      // Habilitar/desabilitar o botão de envio baseado na conexão
+      enviarButton.disabled = !isConnected;
     }
 
-    // Mostrar mensagem de erro
-    function showError(element, message) {
-      element.innerHTML = `<p class="error-message">${message}</p>`;
-    }
-
-    // Mostrar mensagem de sucesso
-    function showSuccess(element, message) {
-      element.innerHTML = `<p class="success-message">${message}</p>`;
-    }
-
-    // Executar fetch com tratamento de erros melhorado e suporte a proxy CORS
+    // Função para fazer requisições seguras com timeout
     async function safeFetch(url, options = {}) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), apiTimeout);
+      
       try {
-        // Tenta usar um proxy CORS se a chamada direta falhar
-        const corsProxies = [
-          '', // Tenta conexão direta primeiro
-          'https://api.allorigins.win/raw?url=',
-          'https://cors-anywhere.herokuapp.com/'
-        ];
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
         
-        let lastError = null;
+        clearTimeout(timeoutId);
         
-        // Tenta cada proxy até que um funcione
-        for (const proxy of corsProxies) {
-          try {
-            const proxyUrl = proxy + url;
-            console.log(`Tentando conexão com: ${proxyUrl}`);
-            
-            const response = await fetch(proxyUrl, options);
-            const data = await response.json();
-            
-            if (!response.ok) {
-              throw new Error(data.error?.message || `Erro HTTP: ${response.status}`);
-            }
-            
-            return { success: true, data };
-          } catch (error) {
-            console.log(`Falha com proxy ${proxy}:`, error);
-            lastError = error;
-            // Continua tentando com o próximo proxy
-          }
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
         
-        // Se chegamos aqui, nenhum proxy funcionou
-        throw lastError || new Error('Todos os métodos de conexão falharam');
+        const data = await response.json();
+        return { data, response };
       } catch (error) {
-        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-          console.error('Erro de conexão:', error);
-          throw new Error('Falha na conexão com a API. Isso pode ser devido a restrições de CORS, problemas de rede ou o endpoint não estar acessível. Tente usar a extensão "CORS Unblock" ou similar.');
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error('Timeout na conexão com a API');
         }
         throw error;
       }
     }
 
-    // Formulário para solicitar chave de upload
-    document.getElementById('upload-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const uploadButton = document.getElementById('upload-button');
-      const uploadResponseContainer = document.getElementById('upload-response-container');
-      const uploadResponseData = document.getElementById('upload-response-data');
-      
-      try {
-        const { appId, token } = getCredentials();
-        const fileName = document.getElementById('file-name').value.trim();
-        const fileType = document.getElementById('file-type').value.trim();
-        const fileLength = document.getElementById('file-length').value.trim();
-        
-        uploadButton.disabled = true;
-        uploadButton.textContent = 'Solicitando...';
-        
-        const url = `https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${encodeURIComponent(fileName)}&file_length=${fileLength}&file_type=${encodeURIComponent(fileType)}&access_token=${encodeURIComponent(token)}`;
-        
-        const { data } = await safeFetch(url, { method: 'POST' });
-        
-        uploadResponseData.textContent = JSON.stringify(data, null, 2);
-        uploadResponseContainer.style.display = 'block';
-      } catch (error) {
-        console.error('Erro ao solicitar chave de upload:', error);
-        uploadResponseData.textContent = error.toString();
-        uploadResponseContainer.style.display = 'block';
-      } finally {
-        uploadButton.disabled = false;
-        uploadButton.textContent = 'Solicitar Chave de Upload';
-      }
-    });
+    // Função para obter credenciais
+    function getCredentials() {
+      return {
+        token: token,
+        pageId: pageId
+      };
+    }
 
-    // Formulário para envio de dados de teste
-    document.getElementById('teste-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const senha = document.getElementById('senha').value;
-      
-      const messageDiv = document.getElementById('message');
-      const responseData = document.getElementById('response-data');
-      const responseContainer = document.getElementById('response-container');
-      const testButton = document.getElementById('test-button');
-      
-      messageDiv.innerHTML = '';
-      responseData.innerHTML = '';
-      responseContainer.style.display = 'none';
+    // Função para verificar a conexão com a API
+    async function checkConnection() {
+      updateStatus('verificando', '🔄 Verificando conexão com a API...');
       
       try {
-        const { appId, token } = getCredentials();
-        
-        testButton.disabled = true;
-        testButton.textContent = 'Enviando...';
-        
-        const jsonData = {
-          test_email: email,
-          password_provided: "true",
-          timestamp: new Date().toISOString()
-        };
-        
-        const file = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
-        const fileName = 'test_data.json';
-        
-        // Etapa 1: Iniciar uma sessão de carregamento
-        const uploadUrl = `https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${encodeURIComponent(fileName)}&file_length=${file.size}&file_type=application/json&access_token=${encodeURIComponent(token)}`;
-        const { data: uploadResult } = await safeFetch(uploadUrl, { method: 'POST' });
-        const uploadSessionId = uploadResult.id.split(':')[1];
-        
-        // Etapa 2: Iniciar o carregamento do arquivo
-        let fileUploadSuccessful = false;
-        let fileError = null;
-        
-        try {
-          // Tentar upload direto primeiro
-          const fileResponse = await fetch(`https://graph.facebook.com/v22.0/upload:${uploadSessionId}`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `OAuth ${token}`,
-              'file_offset': '0',
-            },
-            body: file,
-          });
-          
-          if (!fileResponse.ok) {
-            const errorData = await fileResponse.json();
-            throw new Error(errorData.error?.message || `Erro HTTP: ${fileResponse.status}`);
-          }
-          
-          const fileResult = await fileResponse.json();
-          responseData.textContent = JSON.stringify(fileResult, null, 2);
-          fileUploadSuccessful = true;
-        } catch (uploadError) {
-          console.error("Erro no upload direto:", uploadError);
-          fileError = uploadError;
-          
-          // Se falhar, mostrar detalhes do erro para debug
-          responseData.textContent = `Falha no upload direto: ${uploadError.message}\n\n` +
-                                    `ID da sessão: ${uploadSessionId}\n` +
-                                    `Tamanho do arquivo: ${file.size} bytes\n\n` +
-                                    `Detalhes técnicos:\n${uploadError.stack}`;
-        }
-        
-        if (fileUploadSuccessful) {
-          showSuccess(messageDiv, 'Dados enviados com sucesso!');
-        } else {
-          showError(messageDiv, `Erro ao enviar dados: ${fileError.message}`);
-        }
-        
-        responseContainer.style.display = 'block';
-      } catch (error) {
-        showError(messageDiv, `Erro ao enviar dados: ${error.message}`);
-        responseData.textContent = error.toString();
-        responseContainer.style.display = 'block';
-      } finally {
-        testButton.disabled = false;
-        testButton.textContent = 'Enviar Dados de Teste';
-      }
-    });
-
-    // Formulário para teste de conexão
-    document.getElementById('conexao-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const messageDiv = document.getElementById('message2');
-      const responseData = document.getElementById('response-data-2');
-      const responseContainer = document.getElementById('response-container-2');
-      const button = document.getElementById('conexao-button');
-      
-      messageDiv.innerHTML = '';
-      responseData.innerHTML = '';
-      responseContainer.style.display = 'none';
-      
-      try {
-        const { appId, token } = getCredentials();
-        
-        button.disabled = true;
-        button.textContent = 'Testando...';
-        
+        const { token } = getCredentials();
         const url = `https://graph.facebook.com/v22.0/me?access_token=${encodeURIComponent(token)}`;
         const { data } = await safeFetch(url);
         
-        showSuccess(messageDiv, 'Conexão bem-sucedida!');
-        responseData.textContent = JSON.stringify(data, null, 2);
-        responseContainer.style.display = 'block';
+        isConnected = true;
+        updateStatus('conectado', `✅ Conectado - ${data.name || 'API respondendo normalmente'}`);
       } catch (error) {
-        showError(messageDiv, `Erro de conexão: ${error.message}`);
-        responseData.textContent = error.toString();
-        responseContainer.style.display = 'block';
-      } finally {
-        button.disabled = false;
-        button.textContent = 'Testar Conexão';
+        isConnected = false;
+        updateStatus('desconectado', `❌ Desconectado - ${error.message}`);
       }
+    }
+
+    // Função para recuperar mensagens pré-definidas
+    async function getMensagens() {
+      if (!isConnected) {
+        mensagensDiv.innerHTML = '<div class="loading">❌ Não é possível carregar mensagens - API desconectada</div>';
+        return;
+      }
+
+      mensagensDiv.innerHTML = '<div class="loading">🔄 Carregando mensagens...</div>';
+      
+      try {
+        const { token } = getCredentials();
+        const url = `https://graph.facebook.com/v22.0/${pageId}/message_templates?access_token=${encodeURIComponent(token)}`;
+        const { data } = await safeFetch(url);
+        
+        const mensagens = data.data || [];
+        
+        mensagensDiv.innerHTML = '';
+        
+        if (mensagens.length === 0) {
+          mensagensDiv.innerHTML = '<div class="loading">📝 Nenhuma mensagem pré-definida encontrada</div>';
+        } else {
+          mensagens.forEach((mensagem) => {
+            const mensagemHtml = `
+              <div class="mensagem-item">
+                <strong>📝 ${mensagem.name}</strong><br>
+                <small>Categoria: ${mensagem.category || 'N/A'}</small><br>
+                <em>${mensagem.message?.text || 'Texto não disponível'}</em>
+              </div>
+            `;
+            mensagensDiv.innerHTML += mensagemHtml;
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar mensagens:', error);
+        mensagensDiv.innerHTML = '<div class="loading">❌ Erro ao carregar mensagens</div>';
+        // Recheck connection if there's an error
+        isConnected = false;
+        await checkConnection();
+      }
+    }
+
+    // Função para enviar mensagem pré-definida
+    async function enviarMensagem(event) {
+      event.preventDefault();
+      
+      if (!isConnected) {
+        alert('Não é possível enviar mensagem - API desconectada');
+        return;
+      }
+
+      const name = document.getElementById('name').value.trim();
+      const category = document.getElementById('category').value;
+      const text = document.getElementById('text').value.trim();
+
+      if (!name || !text) {
+        alert('Por favor, preencha todos os campos obrigatórios');
+        return;
+      }
+
+      enviarButton.textContent = 'Enviando...';
+      enviarButton.disabled = true;
+
+      try {
+        const { token } = getCredentials();
+        const url = `https://graph.facebook.com/v22.0/${pageId}/message_templates`;
+        const data = {
+          name,
+          category,
+          message: {
+            text
+          }
+        };
+
+        const { data: result } = await safeFetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        alert('Mensagem enviada com sucesso!');
+        // Limpar o formulário
+        document.getElementById('name').value = '';
+        document.getElementById('text').value = '';
+        // Atualizar a lista de mensagens
+        await getMensagens();
+      } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        alert(`Erro ao enviar mensagem: ${error.message}`);
+        // Recheck connection if there's an error
+        await checkConnection();
+      } finally {
+        enviarButton.textContent = 'Enviar';
+        enviarButton.disabled = !isConnected;
+      }
+    }
+
+    // Event listeners
+    form.addEventListener('submit', enviarMensagem);
+
+    // Função para inicializar a aplicação
+    async function init() {
+      await checkConnection();
+      if (isConnected) {
+        await getMensagens();
+      }
+    }
+
+    // Verificar conexão periodicamente (a cada 30 segundos)
+    setInterval(checkConnection, 30000);
+
+    // Inicializar quando a página carrega
+    window.addEventListener('load', init);
+
+    // Atualizar mensagens quando a página ganha foco (usuário volta para a aba)
+    window.addEventListener('focus', () => {
+      if (isConnected) {
+        getMensagens();
+      }
+    });
+
+    // Recarregar mensagens quando a página é recarregada
+    window.addEventListener('beforeunload', () => {
+      // Salvar estado se necessário
     });
   </script>
 </body>
