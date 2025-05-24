@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Criar Sessão de Upload</title>
+</head>
+<body>
+  <button id="criar-sessao">Criar Sessão de Upload</button>
+  <div id="resposta"></div>
+
+  <script>
+    const appId = '1211147243746599';
+    const accessToken = 'EAARNiDE79ScBOZB9Ivo5pBQWpCm3DeLOMl6fVzk8OIQA6z4n7qZCPkRWKgZCs6nkzAZAjjaBvLeWLWvHD7ZAEYiF11Kj5cLvWrRKd2K6Y6DviZCREZBXpewZAAVZC4yP2lVnW7IPZBbisGNmVZANmJw2mcJFYre15ZBUkqUzLO1aedKlBrqZAnRx2Rce5iPf2SxtNP5HQ2FeRr4EWq8qNZBoDr4b6gm08QawZDZD';
+    const fileName = 'example.jpg';
+    const fileLength = 102400;
+    const fileType = 'image/jpeg';
+
+    document.getElementById('criar-sessao').addEventListener('click', async () => {
+  try {
+    const response = await fetch(`https://graph.facebook.com/v22.0/${appId}/uploads?file_name=${fileName}&file_length=${fileLength}&file_type=${fileType}&access_token=${accessToken}`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+  	  throw new Error(`Erro ${response.status}: ${errorData.error.message}`);
+    }
+    const data = await response.json();
+    console.log(data);
+    if (data.id) {
+      document.getElementById('resposta').innerHTML = `ID da Sessão de Upload: ${data.id}`;
+    } else {
+      document.getElementById('resposta').innerHTML = `Resposta da API: ${JSON.stringify(data)}`;
+    }
+  } catch (error) {
+    document.getElementById('resposta').innerHTML = `Erro: ${error.message}`;
+  }
+});
+
+
+  </script>
+</body>
+</html>
